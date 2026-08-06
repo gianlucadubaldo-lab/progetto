@@ -6,6 +6,7 @@ Centralizza tutte le connessioni e le collections
 from pymongo import MongoClient
 
 # Connessione a MongoDB
+#dubaldo
 client = MongoClient("mongodb+srv://gianlucadubaldo_db_user:7cTJeuclbojaVjHo@ginaluca.ovewjhs.mongodb.net/")
 # Alternativa per localhost:
 # client = MongoClient("mongodb://localhost:27017")

@@ -103,9 +103,17 @@
                 {% if categorie %}
                 <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 1rem; max-height: 220px; overflow-y: auto;">
                     <strong>Liste categorie</strong>
-                    <ul style="margin: 0.75rem 0 0; padding-left: 1rem; list-style: disc; color: #374151;">
+                    <ul style="margin: 0.75rem 0 0; padding-left: 1rem; list-style: none; color: #374151;">
                         {% for cat in categorie %}
-                            <li>{{ cat|capitalize }}</li>
+                            <li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>{{ cat|capitalize }}</span>
+                                {% if cat != 'Altro' %}
+                                <form method="POST" action="{{ url_for('inventario.elimina_categoria') }}" style="margin: 0;">
+                                    <input type="hidden" name="categoria" value="{{ cat }}">
+                                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.6rem;">Elimina</button>
+                                </form>
+                                {% endif %}
+                            </li>
                         {% endfor %}
                     </ul>
                 </div>

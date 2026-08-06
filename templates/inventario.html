@@ -51,21 +51,10 @@
                                 </td>
                                 <td>
                                     <select disabled class="categoria-input">
-                                        <option value="{{ prodotto.categoria }}" selected>{{ prodotto.categoria|capitalize }}</option>
-                                        <option value="liquori">Liquori</option>
-                                        <option value="bevande">Bevande</option>
-                                        <option value="caffetteria">Caffetteria</option>
-                                        <option value="snack">Snack</option>
-                                        <option value="panini">Panini</option>
-                                        <option value="antipasto">Antipasto</option>
-                                        <option value="primi">Primi</option>
-                                        <option value="secondi">Secondi</option>
-                                        <option value="contorni">Contorni</option>
-                                        <option value="caffe">Caffè</option>
-                                        <option value="vino">Vino</option>
-                                        <option value="biglietteria">Biglietteria</option>
-                                        <option value="gelati">Gelati</option>
-                                    </select>
+                                    {% for cat in categorie %}
+                                        <option value="{{ cat }}" {% if cat == prodotto.categoria %}selected{% endif %}>{{ cat|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" value="{{ prodotto.prezzo }}" disabled>
@@ -90,19 +79,9 @@
                         <input type="text" id="nuovo-nome" placeholder="Nome Prodotto" required style="width: 100%; margin-bottom: 0.5rem;">
                         <select id="nuova-categoria" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
                             <option value="">-- Seleziona Categoria --</option>
-                            <option value="liquori">🍷 Liquori</option>
-                            <option value="bevande">🥤 Bevande</option>
-                            <option value="caffetteria">☕ Caffetteria</option>
-                            <option value="snack">🥨 Snack</option>
-                            <option value="panini">🥪 Panini</option>
-                            <option value="antipasto">🍲 Antipasto</option>
-                            <option value="primi">🍝 Primi</option>
-                            <option value="secondi">🍖 Secondi</option>
-                            <option value="contorni">🥗 Contorni</option>
-                            <option value="caffe">☕ Caffè</option>
-                            <option value="vino">🍷 Vino</option>
-                            <option value="biglietteria">🎟️ Biglietteria</option>
-                            <option value="gelati">🍦 Gelati</option>
+                            {% for cat in categorie %}
+                                <option value="{{ cat }}">{{ cat|capitalize }}</option>
+                            {% endfor %}
                         </select>
                         <div style="display: flex; gap: 0.5rem;">
                             <input type="number" id="nuovo-prezzo" step="0.01" placeholder="Prezzo" required style="flex: 1;">
@@ -111,6 +90,26 @@
                         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">➕ Aggiungi Prodotto</button>
                     </form>
                 </div>
+
+                <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e5e7eb;">
+
+                <h3>Gestione Categorie</h3>
+                <div style="margin-bottom: 1rem;">
+                    <form method="POST" action="{{ url_for('inventario.aggiungi_categoria') }}">
+                        <input type="text" name="categoria" placeholder="Nuova categoria" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">➕ Aggiungi Categoria</button>
+                    </form>
+                </div>
+                {% if categorie %}
+                <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 1rem; max-height: 220px; overflow-y: auto;">
+                    <strong>Liste categorie</strong>
+                    <ul style="margin: 0.75rem 0 0; padding-left: 1rem; list-style: disc; color: #374151;">
+                        {% for cat in categorie %}
+                            <li>{{ cat|capitalize }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
 
                 <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e5e7eb;">
 

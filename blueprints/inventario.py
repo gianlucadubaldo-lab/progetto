@@ -9,7 +9,7 @@ from flask import (
     jsonify,
 )
 from flask_login import login_required
-from database import db, inventario_collection, registro_collection, collection_ordini
+from database import db, inventario_collection, registro_collection, collection_ordini, categorie_collection
 from utils import convert_objectid_to_str, _rome_day_bounds
 from werkzeug.utils import secure_filename
 from bson.objectid import ObjectId
@@ -18,6 +18,17 @@ import os
 import pandas as pd
 
 inventario_bp = Blueprint("inventario", __name__)
+
+
+def ensure_categoria(username, categoria):
+    categoria = str(categoria or "").strip()
+    if not categoria:
+        return
+    categorie_collection.update_one(
+        {"username": username, "nome": categoria},
+        {"$setOnInsert": {"nome": categoria, "username": username}},
+        upsert=True,
+    )
 
 
 @inventario_bp.route("/inventario", methods=["GET", "POST"])
@@ -45,6 +56,7 @@ def inventario_root():
                         prezzo = float(r.get("prezzo", 0) or 0)
                         qta = int(r.get("quantita", 0) or 0)
                         if nome:
+                            ensure_categoria(username, categoria)
                             inventario_collection.update_one(
                                 {
                                     "nome": nome,
@@ -68,6 +80,15 @@ def inventario_root():
 
     username = session.get("username")
     items = list(inventario_collection.find({"username": username}).sort("nome", 1))
+    categories_cursor = categorie_collection.find({"username": username}).sort("nome", 1)
+    categories = [c.get("nome", "Altro") for c in categories_cursor]
+    product_categories = {i.get("categoria", "Altro") for i in items}
+    for cat in sorted(product_categories):
+        if cat not in categories:
+            categories.append(cat)
+    if "Altro" not in categories:
+        categories.insert(0, "Altro")
+
     inventario_list = [
         {
             "_id": str(i.get("_id")),
@@ -123,6 +144,7 @@ def inventario_root():
         riepilogo_mesi=riepilogo_mesi,
         mese_selected=mese_selected,
         mese_totali=mese_totali,
+        categorie=categories,
     )
 
 
@@ -143,6 +165,7 @@ def aggiorna_prodotto():
             return jsonify(success=False, message="Campi vuoti")
         prezzo = round(float(str(data.get("prezzo")).replace(",", ".")), 2)
         quantità = int(float(str(data.get("quantità")).replace(",", ".")))
+        ensure_categoria(username, categoria)
         inventario_collection.update_one(
             {"_id": prodotto_id, "username": username},
             {
@@ -177,6 +200,7 @@ def aggiungi_prodotto():
         quantita = int(float(str(data.get("quantità")).replace(",", ".")))
         if inventario_collection.find_one({"nome": nome, "username": username}):
             return jsonify(success=False, message="Esiste già")
+        ensure_categoria(username, categoria)
         inventario_collection.insert_one(
             {
                 "nome": nome,
@@ -189,6 +213,40 @@ def aggiungi_prodotto():
         return jsonify(success=True)
     except Exception as e:
         return jsonify(success=False, message=str(e))
+
+
+@inventario_bp.route("/aggiungi_categoria", methods=["POST"])
+@login_required
+def aggiungi_categoria():
+    if session.get("role") != "admin":
+        return redirect(url_for("auth.login"))
+    categoria = str(request.form.get("categoria", "")).strip()
+    username = session.get("username")
+    if not categoria:
+        flash("Inserisci una categoria valida.", "error")
+    elif categorie_collection.find_one({"username": username, "nome": categoria}):
+        flash(f"La categoria '{categoria}' esiste già.", "error")
+    else:
+        categorie_collection.insert_one({"username": username, "nome": categoria})
+        flash(f"Categoria '{categoria}' aggiunta.", "success-message")
+    return redirect(url_for("inventario.inventario_root"))
+
+
+@inventario_bp.route("/elimina_categoria", methods=["POST"])
+@login_required
+def elimina_categoria():
+    if session.get("role") != "admin":
+        return redirect(url_for("auth.login"))
+    categoria = str(request.form.get("categoria", "")).strip()
+    username = session.get("username")
+    if not categoria:
+        flash("Categoria non valida.", "error")
+    elif inventario_collection.find_one({"username": username, "categoria": categoria}):
+        flash("Impossibile eliminare categoria usata da prodotti.", "error")
+    else:
+        categorie_collection.delete_one({"username": username, "nome": categoria})
+        flash(f"Categoria '{categoria}' eliminata.", "success-message")
+    return redirect(url_for("inventario.inventario_root"))
 
 
 @inventario_bp.route("/elimina_prodotto", methods=["POST"])

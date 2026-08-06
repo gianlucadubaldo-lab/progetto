@@ -9,7 +9,7 @@ from flask import (
     jsonify,
 )
 from flask_login import login_required
-from database import collection_ordini, inventario_collection
+from database import collection_ordini, inventario_collection, categorie_collection
 from bson.objectid import ObjectId
 from datetime import datetime
 
@@ -22,10 +22,12 @@ def cassa_root():
     if session.get("role") != "admin":
         return redirect(url_for("auth.login"))
     username = session.get("username")
-    prodotti = inventario_collection.find({"username": username})
+    prodotti = list(inventario_collection.find({"username": username}))
     categorizzati = {}
+    product_categories = set()
     for p in prodotti:
         cat = p.get("categoria", "Altro")
+        product_categories.add(cat)
         categorizzati.setdefault(cat, []).append(
             {
                 "_id": str(p["_id"]),
@@ -34,7 +36,20 @@ def cassa_root():
                 "quantita": int(p.get("quantita", 0)),
             }
         )
-    return render_template("cassa.html", prodotti_categorizzati=categorizzati)
+
+    categories_cursor = categorie_collection.find({"username": username}).sort("nome", 1)
+    categories = [c.get("nome", "Altro") for c in categories_cursor]
+    for cat in sorted(product_categories):
+        if cat not in categories:
+            categories.append(cat)
+    if "Altro" not in categories:
+        categories.insert(0, "Altro")
+
+    return render_template(
+        "cassa.html",
+        prodotti_categorizzati=categorizzati,
+        categorie=categories,
+    )
 
 
 @cassa_bp.route("/conferma_pagamento", methods=["POST"])

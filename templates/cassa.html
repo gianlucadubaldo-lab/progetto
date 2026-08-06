@@ -36,31 +36,25 @@
 
     <div class="pos-right">
         <div class="tab-selector" id="category-modal">
-            <button class="tab active" onclick="switchTab('liquori')">🍷 Liquori</button>
-            <button class="tab" onclick="switchTab('bevande')">🥤 Bevande</button>
-            <button class="tab" onclick="switchTab('caffetteria')">☕ Caffetteria</button>
-            <button class="tab" onclick="switchTab('snack')">🥨 Snack</button>
-            <button class="tab" onclick="switchTab('panini')">🥪 Panini</button>
-            <button class="tab" onclick="switchTab('antipasto')">🍲 Antipasto</button>
-            <button class="tab" onclick="switchTab('primi')">🍝 Primi</button>
-            <button class="tab" onclick="switchTab('secondi')">🍖 Secondi</button>
-            <button class="tab" onclick="switchTab('contorni')">🥗 Contorni</button>
-            <button class="tab" onclick="switchTab('caffe')">☕ Caffè</button>
-            <button class="tab" onclick="switchTab('vino')">🍷 Vino</button>
-            <button class="tab" onclick="switchTab('biglietteria')">🎟️ Biglietteria</button>
-            <button class="tab" onclick="switchTab('gelati')">🍦 Gelati</button>
+            {% if categorie %}
+                {% for cat in categorie %}
+                    <button class="tab{% if loop.first %} active{% endif %}" onclick='switchTab({{ cat|tojson|safe }})'>{{ cat|capitalize }}</button>
+                {% endfor %}
+            {% else %}
+                <div class="empty-categories">Nessuna categoria disponibile.</div>
+            {% endif %}
         </div>
-        
 
         <div class="product-grid-wrapper">
             <div class="product-grid" id="product-grid">
-                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
 const prodottiCategorizzati = JSON.parse('{{ prodotti_categorizzati | tojson | safe }}');
+const categorie = JSON.parse('{{ categorie | tojson | safe }}');
 let metodoPagamento = null; 
 
 function selezionaMetodoPagamento(metodo) {
@@ -287,7 +281,9 @@ function svuotaCarrello() {
     aggiornaTotali();
 }
 
-switchTab('liquori');
+if (categorie && categorie.length > 0) {
+    switchTab(categorie[0]);
+}
 </script>
 
 {% endblock %}

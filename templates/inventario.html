@@ -1,0 +1,759 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="settings-form" style="max-width: 1700px; margin: 2rem auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Gestione Inventario & Registro</h2>
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem;">
+        <button onclick="showTab('inventario')" class="tab-btn active" id="btn-inventario">📦 Prodotti</button>
+        <button onclick="showTab('registro')" class="tab-btn" id="btn-registro">📒 Registro Corrispettivi</button>
+        <button onclick="showTab('ordini')" class="tab-btn" id="btn-ordini">🧾 Ordini</button>
+        <button onclick="showTab('moduli')" class="tab-btn" id="btn-moduli">📋 Moduli</button>
+    </div>
+    
+    <div id="tab-inventario" class="tab-content">
+        <div class="inventory-container large-container" style="display: flex; gap: 2rem; margin: 0; flex-direction: row;">
+            
+            <div class="inventory-box left-box" style="flex: 3; min-width: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>Prodotti in Magazzino</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button id="modifica-btn" onclick="toggleModifica()" class="btn btn-warning btn-sm">✏️ Modifica</button>
+                        <button id="salva-tutto-btn" onclick="salvaTutto()" class="btn btn-success" style="display: none;">💾 Salva Tutto</button>
+                        <button id="elimina-selezionati-btn" onclick="eliminaSelezionati()" class="btn btn-danger" style="display: none;">🗑️ Elimina Selezionati</button>
+                    </div>
+                </div>
+
+                <div class="scrollable-table-container">
+                    {% if inventario %}
+                    <table class="tabella-menu">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px; text-align: center;">
+                                    <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)">
+                                </th>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th style="width: 120px;">Prezzo (€)</th>
+                                <th style="width: 100px;">Quantità</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prodotto in inventario %}
+                            <tr data-id="{{ prodotto._id }}">
+                                <td style="text-align: center;">
+                                    <input type="checkbox" class="product-checkbox" onchange="updateEliminaBtn()">
+                                </td>
+                                <td>
+                                    <input type="text" value="{{ prodotto.nome }}" disabled>
+                                </td>
+                                <td>
+                                    <select disabled class="categoria-input">
+                                        <option value="{{ prodotto.categoria }}" selected>{{ prodotto.categoria|capitalize }}</option>
+                                        <option value="liquori">Liquori</option>
+                                        <option value="bevande">Bevande</option>
+                                        <option value="caffetteria">Caffetteria</option>
+                                        <option value="snack">Snack</option>
+                                        <option value="panini">Panini</option>
+                                        <option value="antipasto">Antipasto</option>
+                                        <option value="primi">Primi</option>
+                                        <option value="secondi">Secondi</option>
+                                        <option value="contorni">Contorni</option>
+                                        <option value="caffe">Caffè</option>
+                                        <option value="vino">Vino</option>
+                                        <option value="biglietteria">Biglietteria</option>
+                                        <option value="gelati">Gelati</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" value="{{ prodotto.prezzo }}" disabled>
+                                </td>
+                                <td>
+                                    <input type="number" value="{{ prodotto.quantita }}" disabled>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                        <p style="text-align: center; color: #6b7280; padding: 2rem;">Nessun prodotto presente.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="inventory-box right-box" style="flex: 1; height: fit-content;">
+                <h3>Aggiungi Nuovo</h3>
+                <div class="aggiungi-box">
+                    <form id="aggiungi-form">
+                        <input type="text" id="nuovo-nome" placeholder="Nome Prodotto" required style="width: 100%; margin-bottom: 0.5rem;">
+                        <select id="nuova-categoria" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <option value="">-- Seleziona Categoria --</option>
+                            <option value="liquori">🍷 Liquori</option>
+                            <option value="bevande">🥤 Bevande</option>
+                            <option value="caffetteria">☕ Caffetteria</option>
+                            <option value="snack">🥨 Snack</option>
+                            <option value="panini">🥪 Panini</option>
+                            <option value="antipasto">🍲 Antipasto</option>
+                            <option value="primi">🍝 Primi</option>
+                            <option value="secondi">🍖 Secondi</option>
+                            <option value="contorni">🥗 Contorni</option>
+                            <option value="caffe">☕ Caffè</option>
+                            <option value="vino">🍷 Vino</option>
+                            <option value="biglietteria">🎟️ Biglietteria</option>
+                            <option value="gelati">🍦 Gelati</option>
+                        </select>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="number" id="nuovo-prezzo" step="0.01" placeholder="Prezzo" required style="flex: 1;">
+                            <input type="number" id="nuova-quantita" placeholder="Qtà" required style="flex: 1;">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">➕ Aggiungi Prodotto</button>
+                    </form>
+                </div>
+
+                <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e5e7eb;">
+
+                <h3>Importa da Excel</h3>
+                <form method="POST" enctype="multipart/form-data" class="upload-form" style="text-align: left;">
+                    <input type="file" name="file" accept=".xlsx" required style="width: 100%; margin-bottom: 0.5rem;">
+                    <button type="submit" class="btn btn-secondary" style="width: 100%;">📂 Carica File</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-registro" class="tab-content" style="display: none;">
+        <div id="inv-flags" data-open-registro="{{ '1' if mese_selected or request.args.get('tab') == 'registro' else '0' }}" style="display:none"></div>
+        <div class="inventory-container large-container" style="display: block; margin: 0;">
+            <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="color: #0369a1; margin-bottom: 0.5rem;">Chiusura Giornaliera</h3>
+                    <p style="color: #0c4a6e; font-size: 0.9rem;">Calcola i totali degli ordini di oggi e salvali nel registro.</p>
+                </div>
+                <form method="POST" action="{{ url_for('inventario.esegui_chiusura') }}">
+                    <button type="submit" class="btn btn-primary">🖨️ Esegui Chiusura Oggi</button>
+                </form>
+            </div>
+
+            <h3>Storico Corrispettivi</h3>
+            <div class="table-container">
+                <table class="tabella-menu">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Totale Lordo</th>
+                            <th>Contanti</th>
+                            <th>POS</th>
+                            <th>Totale IVA</th>
+                            <th># Scontrini</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in registro %}
+                        <tr>
+                            <td>{{ r.data.strftime('%Y-%m-%d') if r.data.__class__.__name__ == 'datetime' else r.data }}</td>
+                            <td>€{{ '%.2f'|format(r.totale_lordo) }}</td>
+                            <td>€{{ '%.2f'|format(r.contanti) }}</td>
+                            <td>€{{ '%.2f'|format(r.pos) }}</td>
+                            <td>€{{ '%.2f'|format(r.totale_iva) }}</td>
+                            <td>{{ r.numero_scontrini }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem;">Nessuna chiusura registrata.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <hr style="margin: 2rem 0; opacity:.4;">
+
+            <h3>Riepilogo Mensile</h3>
+            <form method="GET" action="{{ url_for('inventario.inventario_root') }}" style="display:flex; gap: .75rem; align-items:center; margin-bottom: 1rem;">
+                <input type="hidden" name="tab" value="registro">
+                <input type="month" name="mese" value="{{ mese_selected or '' }}" style="padding:.5rem; border:1px solid #cbd5e1; border-radius:6px; width: auto;">
+                <button class="btn btn-primary" style="padding:.6rem 1rem;">Filtra</button>
+                {% if mese_selected %}
+                <a href="{{ url_for('inventario.inventario_root', tab='registro') }}" style="margin-left:.5rem; text-decoration:none;">Pulisci filtro</a>
+                {% endif %}
+            </form>
+
+            {% if mese_totali %}
+            <div class="table-container" style="margin-bottom:1rem;">
+              <table class="tabella-menu">
+                <thead>
+                  <tr>
+                    <th>Mese</th>
+                    <th>Totale Lordo</th>
+                    <th>Contanti</th>
+                    <th>POS</th>
+                    <th>Totale IVA</th>
+                    <th># Scontrini</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{{ mese_totali.mese }}</td>
+                    <td>€{{ '%.2f'|format(mese_totali.totale_lordo) }}</td>
+                    <td>€{{ '%.2f'|format(mese_totali.contanti) }}</td>
+                    <td>€{{ '%.2f'|format(mese_totali.pos) }}</td>
+                    <td>€{{ '%.2f'|format(mese_totali.totale_iva) }}</td>
+                    <td>{{ mese_totali.numero_scontrini }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            {% endif %}
+
+            <div class="table-container">
+                <table class="tabella-menu">
+                    <thead>
+                        <tr>
+                            <th>Mese</th>
+                            <th>Totale Lordo</th>
+                            <th>Contanti</th>
+                            <th>POS</th>
+                            <th>Totale IVA</th>
+                            <th># Scontrini</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in riepilogo_mesi %}
+                        <tr>
+                            <td>{{ m.mese }}</td>
+                            <td>€{{ '%.2f'|format(m.totale_lordo) }}</td>
+                            <td>€{{ '%.2f'|format(m.contanti) }}</td>
+                            <td>€{{ '%.2f'|format(m.pos) }}</td>
+                            <td>€{{ '%.2f'|format(m.totale_iva) }}</td>
+                            <td>{{ m.numero_scontrini }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align:center; padding:2rem;">Nessun dato mensile disponibile.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-ordini" class="tab-content" style="display: none;">
+        <div class="inventory-container large-container" style="display: block; margin: 0;">
+            <h3>Ricerca Ordini</h3>
+            
+            <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Cerca per Numero</label>
+                    <input type="number" id="ricerca-numero" placeholder="Inserisci numero ordine" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Oppure per Data Inizio</label>
+                    <input type="date" id="ricerca-data-inizio" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Data Fine</label>
+                    <input type="date" id="ricerca-data-fine" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                </div>
+                
+                <div>
+                    <button onclick="cercaOrdini()" class="btn btn-primary">🔍 Cerca</button>
+                    <button onclick="pulisciRicercaOrdini()" class="btn btn-secondary" style="margin-left: 0.5rem;">🔄 Reset</button>
+                </div>
+            </div>
+
+            <div id="ordini-risultati" style="display: none;">
+                <h4 style="margin-bottom: 1rem; color: #0369a1;">Risultati della ricerca (<span id="ordini-count">0</span>)</h4>
+                
+                <div class="table-container">
+                    <table class="tabella-menu" id="ordini-tabella">
+                        <thead>
+                            <tr>
+                                <th>Numero</th>
+                                <th>Data/Ora</th>
+                                <th>Prodotti</th>
+                                <th>Totale</th>
+                                <th>Pagato</th>
+                                <th>Resto</th>
+                                <th>Metodo</th>
+                                <th>Note</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordini-tbody">
+                            <!-- Risultati dinamici -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="ordini-vuoto" style="text-align: center; color: #6b7280; padding: 3rem;">
+                <p style="font-size: 1.1rem;">👇 Inserisci i criteri di ricerca e clicca "Cerca"</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-moduli" class="tab-content" style="display: none;">
+        <div class="inventory-container large-container" style="display: block; margin: 0;">
+            <h3>📋 Compilazione Moduli</h3>
+            
+            <!-- SELEZIONE MODULO -->
+            <div id="moduli-selector" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin: 2rem 0;">
+                <div onclick="openModuloSd1()" style="cursor: pointer; padding: 2rem; border: 2px solid #cbd5e1; border-radius: 12px; text-align: center; transition: all 0.3s; background: #f8fafc;" onmouseover="this.style.borderColor='#0369a1'; this.style.boxShadow='0 4px 12px rgba(3,105,161,0.1)'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none'">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+                    <h4 style="margin: 0.5rem 0;">SD/1</h4>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Archivio moduli SD/1</p>
+                </div>
+                
+                <div onclick="selezionaModulo('ricevuta')" style="cursor: pointer; padding: 2rem; border: 2px solid #cbd5e1; border-radius: 12px; text-align: center; transition: all 0.3s; background: #f8fafc;" onmouseover="this.style.borderColor='#0369a1'; this.style.boxShadow='0 4px 12px rgba(3,105,161,0.1)'" onmouseout="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none'">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🧾</div>
+                    <h4 style="margin: 0.5rem 0;">Ricevuta</h4>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Ricevuta di pagamento</p>
+                </div>
+            </div>
+
+            <!-- FORM RICEVUTA -->
+            <form id="form-ricevuta" class="modulo-form" style="display: none; background: #f8fafc; padding: 2rem; border-radius: 12px; margin-top: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h3 style="color: #0369a1; margin: 0;">🧾 Ricevuta di Pagamento</h3>
+                    <button type="button" onclick="chiudiModulo()" style="background: #ef4444; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer;">❌ Chiudi</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                    <!-- Ricevente -->
+                    <div>
+                        <h4 style="color: #1f2937; margin-bottom: 1rem;">📋 Dati Ricevente</h4>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Denominazione</label>
+                            <input type="text" name="ricevente_nome" placeholder="Nome ricevente" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Partita IVA/CF</label>
+                            <input type="text" name="ricevente_cf" placeholder="Codice fiscale" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- Pagamento -->
+                    <div>
+                        <h4 style="color: #1f2937; margin-bottom: 1rem;">💰 Dettagli Pagamento</h4>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Importo (€)</label>
+                            <input type="number" name="importo_ricevuta" step="0.01" placeholder="0.00" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Data Pagamento</label>
+                            <input type="date" name="data_pagamento" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        </div>
+                    </div>
+
+                    <!-- Causale -->
+                    <div>
+                        <h4 style="color: #1f2937; margin-bottom: 1rem;">📝 Causale</h4>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Causale Pagamento</label>
+                            <input type="text" name="causale" placeholder="Es: Pagamento fattura..." style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Metodo Pagamento</label>
+                            <select name="metodo_pagamento_ricevuta" style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                <option value="">-- Seleziona --</option>
+                                <option value="contanti">Contanti</option>
+                                <option value="assegno">Assegno</option>
+                                <option value="bonifico">Bonifico</option>
+                                <option value="carta">Carta di Credito</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h4 style="color: #1f2937; margin-bottom: 1rem;">📝 Note</h4>
+                    <textarea name="note_ricevuta" placeholder="Note aggiuntive..." style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; min-height: 100px; font-family: inherit;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Salva</button>
+                    <button type="button" onclick="stampaModulo('ricevuta')" class="btn btn-secondary" style="flex: 1;">🖨️ Stampa</button>
+                    <button type="button" onclick="chiudiModulo()" class="btn btn-danger" style="flex: 1;">❌ Chiudi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div style="margin-top: 1rem;">
+            {% for category, message in messages %}
+                <div class="{{ category }}">{{ message }}</div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+</div>
+
+<script>
+// Tabs
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    const tab = document.getElementById('tab-' + tabName);
+    if (tab) tab.style.display = 'block';
+    const btn = document.getElementById('btn-' + tabName);
+    if (btn) btn.classList.add('active');
+}
+
+// Modalità modifica inventario
+function toggleModifica() {
+    // Seleziona sia input che select
+    const inputs = document.querySelectorAll('.tabella-menu input:not(.product-checkbox), .tabella-menu select');
+    const editBtn = document.getElementById('modifica-btn');
+    const salvaBtn = document.getElementById('salva-tutto-btn');
+    if (!inputs.length || !editBtn) return;
+    
+    const editMode = inputs[0].disabled === true;
+    
+    inputs.forEach(i => i.disabled = !editMode);
+    
+    if (editMode) {
+        editBtn.style.display = 'none';
+        salvaBtn.style.display = 'block';
+    } else {
+        editBtn.style.display = 'block';
+        salvaBtn.style.display = 'none';
+    }
+    
+    editBtn.textContent = editMode ? '❌ Fine Modifica' : '✏️ Modifica';
+    // Rimuovo cambio stile inline, gestito dalle classi CSS btn-warning ecc
+}
+
+// Gestione checkbox
+function toggleSelectAll(checkbox) {
+    document.querySelectorAll('.product-checkbox').forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateEliminaBtn();
+}
+
+function updateEliminaBtn() {
+    const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+    const btn = document.getElementById('elimina-selezionati-btn');
+    btn.style.display = checkedBoxes.length > 0 ? 'block' : 'none';
+}
+
+// Salva Tutto
+function salvaTutto() {
+    const rows = document.querySelectorAll('.tabella-menu tbody tr');
+    const modifiche = [];
+    let contaModifiche = 0;
+
+    rows.forEach(row => {
+        const id = row.getAttribute('data-id');
+        // Seleziona input e select ignorando la checkbox
+        const fields = row.querySelectorAll('input:not(.product-checkbox), select');
+        
+        // Ordine atteso: [0]Nome, [1]Categoria(Select), [2]Prezzo, [3]Quantità
+        if (fields.length >= 4) {
+            const nome = fields[0].value.trim();
+            const categoria = fields[1].value.trim();
+            const prezzo = fields[2].value;
+            const quantità = fields[3].value;
+
+            if (nome && categoria) {
+                modifiche.push({
+                    id, nome, categoria, prezzo, quantità, row
+                });
+                contaModifiche++;
+            }
+        }
+    });
+
+    if (contaModifiche === 0) {
+        alert('Nessun prodotto da salvare');
+        return;
+    }
+
+    if (!confirm(`Vuoi salvare ${contaModifiche} prodotto/i?`)) {
+        return;
+    }
+
+    const promises = modifiche.map(mod => {
+        return fetch('/aggiorna_prodotto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: mod.id,
+                nome: mod.nome,
+                categoria: mod.categoria,
+                prezzo: mod.prezzo,
+                quantità: mod.quantità
+            })
+        })
+        .then(res => res.json())
+        .then(data => ({ success: data.success, nome: mod.nome }))
+        .catch(err => ({ success: false, nome: mod.nome, error: err.message }));
+    });
+
+    Promise.all(promises).then(results => {
+        const successful = results.filter(r => r.success).length;
+        const failed = results.filter(r => !r.success);
+
+        let message = `${successful} prodotto/i salvato/i con successo!`;
+        if (failed.length > 0) message += `\n\n${failed.length} errori.`;
+
+        alert(message);
+
+        if (successful > 0) {
+            document.getElementById('modifica-btn').click(); // Esci da modifica
+            if (successful === contaModifiche) location.reload();
+        }
+    });
+}
+
+// Elimina Selezionati
+function eliminaSelezionati() {
+    const checkedBoxes = document.querySelectorAll('.product-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        alert('Seleziona almeno un prodotto');
+        return;
+    }
+    
+    if (!confirm(`Sei sicuro di voler eliminare ${checkedBoxes.length} prodotto/i?`)) return;
+    
+    const promises = Array.from(checkedBoxes).map(checkbox => {
+        const row = checkbox.closest('tr');
+        const id = row.getAttribute('data-id');
+        return fetch('/elimina_prodotto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) row.remove();
+            return data;
+        });
+    });
+    
+    Promise.all(promises).then(results => {
+        const successful = results.filter(r => r.success).length;
+        alert(`${successful} prodotto/i eliminato/i.`);
+        updateEliminaBtn();
+    });
+}
+
+// Aggiungi Prodotto
+const addForm = document.getElementById('aggiungi-form');
+if (addForm) {
+    addForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const nome = document.getElementById('nuovo-nome').value;
+        const categoria = document.getElementById('nuova-categoria').value;
+        const prezzo = document.getElementById('nuovo-prezzo').value;
+        const quantità = document.getElementById('nuova-quantita').value;
+        fetch('/aggiungi_prodotto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, categoria, prezzo, quantità })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) location.reload();
+            else alert(data.message || 'Errore');
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const flags = document.getElementById('inv-flags');
+    if (flags && flags.dataset.openRegistro === '1') {
+        showTab('registro');
+    }
+});
+
+// ====================== RICERCA ORDINI ======================
+function cercaOrdini() {
+    const numero = document.getElementById('ricerca-numero').value;
+    const dataInizio = document.getElementById('ricerca-data-inizio').value;
+    const dataFine = document.getElementById('ricerca-data-fine').value;
+
+    let tipoRicerca = 'tutti';
+    let datiRicerca = {};
+
+    if (numero) {
+        tipoRicerca = 'numero';
+        datiRicerca = { numero };
+    } else if (dataInizio && dataFine) {
+        tipoRicerca = 'data';
+        datiRicerca = { data_inizio: dataInizio, data_fine: dataFine };
+    }
+
+    fetch('/ricerca_ordini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            tipo_ricerca: tipoRicerca,
+            ...datiRicerca
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const risultati = document.getElementById('ordini-risultati');
+        const vuoto = document.getElementById('ordini-vuoto');
+        const tbody = document.getElementById('ordini-tbody');
+        const count = document.getElementById('ordini-count');
+
+        if (data.success && data.ordini && data.ordini.length > 0) {
+            tbody.innerHTML = '';
+            count.textContent = data.ordini.length;
+
+            data.ordini.forEach(ordine => {
+                const row = document.createElement('tr');
+                
+                const numProdotti = ordine.prodotti ? ordine.prodotti.length : 0;
+                const metodo = ordine.metodo_pagamento || 'N/A';
+                const note = ordine.nota || '-';
+                
+                row.innerHTML = `
+                    <td><strong>#${ordine.numero}</strong></td>
+                    <td>${ordine.timestamp || 'N/A'}</td>
+                    <td>${numProdotti}</td>
+                    <td>€${parseFloat(ordine.totale || 0).toFixed(2)}</td>
+                    <td>€${parseFloat(ordine.pagato || 0).toFixed(2)}</td>
+                    <td>€${parseFloat(ordine.resto || 0).toFixed(2)}</td>
+                    <td>${metodo}</td>
+                    <td>${note}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="visualizzaOrdine('${ordine._id}')">👁️ Visualizza</button>
+                        <button class="btn btn-secondary btn-sm" onclick="stampaOrdine('${ordine._id}')">🖨️ Stampa</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+
+            risultati.style.display = 'block';
+            vuoto.style.display = 'none';
+        } else {
+            tbody.innerHTML = '';
+            count.textContent = 0;
+            risultati.style.display = 'block';
+            vuoto.style.display = 'none';
+        }
+    })
+    .catch(err => {
+        console.error('Errore:', err);
+        alert('❌ Errore nella ricerca ordini');
+    });
+}
+
+function pulisciRicercaOrdini() {
+    document.getElementById('ricerca-numero').value = '';
+    document.getElementById('ricerca-data-inizio').value = '';
+    document.getElementById('ricerca-data-fine').value = '';
+    document.getElementById('ordini-risultati').style.display = 'none';
+    document.getElementById('ordini-vuoto').style.display = 'block';
+}
+
+function visualizzaOrdine(ordineId) {
+    fetch(`/api/ordini/${ordineId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.ordine) {
+                const o = data.ordine;
+                let dettagliProdotti = '';
+                
+                if (o.prodotti && o.prodotti.length > 0) {
+                    dettagliProdotti = o.prodotti.map(p => 
+                        `${p.nome} x${p.quantita} = €${(p.prezzo * p.quantita).toFixed(2)}`
+                    ).join('\n');
+                }
+                
+                const dettagli = `
+📄 ORDINE #${o.numero}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 Data: ${o.timestamp || 'N/A'}
+💰 Totale: €${parseFloat(o.totale || 0).toFixed(2)}
+💳 Pagato: €${parseFloat(o.pagato || 0).toFixed(2)}
+🔄 Resto: €${parseFloat(o.resto || 0).toFixed(2)}
+💳 Metodo: ${o.metodo_pagamento || 'N/A'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛒 PRODOTTI:
+${dettagliProdotti}
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 Note: ${o.nota || 'Nessuna'}
+                `;
+                
+                alert(dettagli);
+            }
+        })
+        .catch(err => console.error('Errore:', err));
+}
+
+function stampaOrdine(ordineId) {
+    window.open(`/ricevuta/${ordineId}`, '_blank');
+}
+
+// ====================== MODULI ======================
+function selezionaModulo(tipo) {
+    document.getElementById('moduli-selector').style.display = 'none';
+    const form = document.getElementById(`form-${tipo}`);
+    if (form) {
+        form.style.display = 'block';
+    }
+}
+
+function chiudiModulo() {
+    document.querySelectorAll('.modulo-form').forEach(f => f.style.display = 'none');
+    document.getElementById('moduli-selector').style.display = 'grid';
+}
+
+function stampaModulo(tipo) {
+    const form = document.getElementById(`form-${tipo}`);
+    if (!form) return;
+    
+    window.print();
+}
+
+// Form Ricevuta
+const formRicevuta = document.getElementById('form-ricevuta');
+if (formRicevuta) {
+    formRicevuta.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            const response = await fetch('/api/moduli/ricevuta', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                alert('✅ Ricevuta salvata con successo!');
+                chiudiModulo();
+                e.target.reset();
+            } else {
+                alert('❌ Errore: ' + (result.message || 'Errore sconosciuto'));
+            }
+        } catch (error) {
+            console.error('Errore:', error);
+            alert('❌ Errore nel salvataggio');
+        }
+    });
+}
+
+function openModuloSd1(){
+    window.location.href = "{{ url_for('moduli.modulo_sd1') }}";
+}
+
+// Fix Promise.all .then syntax
+PromiseAllThenFix = true; // marker
+</script>
+
+{% endblock %}

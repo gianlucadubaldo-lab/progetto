@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiosk</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='cassa.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <!-- Logo -->
+            <a href="/home" class="navbar-logo">
+                <i class="fas fa-store"></i>
+                <span>Kiosk</span>
+            </a>
+            
+            <!-- Menu Desktop -->
+            <div class="navbar-menu">
+                <a href="/cassa" class="nav-link">
+                    <i class="fas fa-cash-register"></i>
+                    <span>Cassa</span>
+                </a>
+                <a href="/inventario" class="nav-link">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventario</span>
+                </a>
+                <a href="/statistiche" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Statistiche</span>
+                </a>
+                <a href="/impostazioni" class="nav-link settings-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Impostazioni</span>
+                </a>
+                <a href="/logout" class="nav-link logout-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Esci</span>
+                </a>
+            </div>
+            
+            <!-- Hamburger Menu Mobile -->
+            <button class="hamburger-btn" id="hamburgerBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu Dropdown -->
+        <div class="mobile-dropdown" id="mobileDropdown">
+            <a href="/cassa" class="dropdown-link">
+                <i class="fas fa-cash-register"></i> Cassa
+            </a>
+            <a href="/inventario" class="dropdown-link">
+                <i class="fas fa-boxes"></i> Inventario
+            </a>
+            <a href="/statistiche" class="dropdown-link">
+                <i class="fas fa-chart-bar"></i> Statistiche
+            </a>
+            <a href="/impostazioni" class="dropdown-link">
+                <i class="fas fa-cog"></i> Impostazioni
+            </a>
+            <a href="/logout" class="dropdown-link">
+                <i class="fas fa-sign-out-alt"></i> Esci
+            </a>
+        </div>
+    </nav>
+    
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const mobileDropdown = document.getElementById('mobileDropdown');
+
+        // Toggle menu on button click
+        hamburgerBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            hamburgerBtn.classList.toggle('active');
+            mobileDropdown.classList.toggle('active');
+            document.body.style.overflow = mobileDropdown.classList.contains('active') ? 'hidden' : 'auto';
+        });
+
+        // Close menu when clicking a link
+        document.querySelectorAll('.dropdown-link').forEach(link => {
+            link.addEventListener('click', function() {
+                hamburgerBtn.classList.remove('active');
+                mobileDropdown.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!hamburgerBtn.contains(event.target) && !mobileDropdown.contains(event.target)) {
+                hamburgerBtn.classList.remove('active');
+                mobileDropdown.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        // Close menu on window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                hamburgerBtn.classList.remove('active');
+                mobileDropdown.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        // Highlight active link
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link, .dropdown-link');
+            
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.style.color = '#0077B6';
+                    if (link.querySelector('i')) {
+                        link.querySelector('i').style.color = '#0077B6';
+                    }
+                }
+            });
+        });
+    </script>
+
+    <!-- Helper per responsive design - Inserire prima di </head> in base.html -->
+<script>
+    // Rileva il tipo di dispositivo in base al viewport
+    const deviceInfo = {
+        getBreakpoint: () => {
+            const width = window.innerWidth;
+            if (width > 1200) return 'desktop';
+            if (width > 768) return 'tablet';
+            return 'mobile';
+        },
+        
+        isTouch: () => {
+            return (('ontouchstart' in window) ||
+                    (navigator.maxTouchPoints > 0) ||
+                    (navigator.msMaxTouchPoints > 0));
+        },
+        
+        getDeviceType: () => {
+            const ua = navigator.userAgent.toLowerCase();
+            if (/ipad|android(?!.*mobi)/.test(ua)) return 'tablet';
+            if (/iphone|android|windows phone/.test(ua)) return 'mobile';
+            return 'desktop';
+        },
+        
+        log: () => {
+            console.log(`📱 Breakpoint: ${deviceInfo.getBreakpoint()}`);
+            console.log(`👆 Touch: ${deviceInfo.isTouch()}`);
+            console.log(`🖥️ Tipo: ${deviceInfo.getDeviceType()}`);
+        }
+    };
+    
+    // Log al caricamento della pagina
+    window.addEventListener('DOMContentLoaded', () => {
+        deviceInfo.log();
+    });
+    
+    // Aggiorna al resize
+    window.addEventListener('resize', () => {
+        deviceInfo.log();
+    });
+</script>
+</body>
+</html>

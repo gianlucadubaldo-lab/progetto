@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="home-center">
+    <div class="home-content">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 2rem 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2 style="color: #0077B6; margin: 0;">📅 Calendario Semproniano</h2>
+                <button onclick="aggiornaCalendario()" class="btn-primary" style="background-color: #0077B6; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 0.5rem; cursor: pointer; font-weight: 600;">
+                    🔄 Aggiorna Calendario
+                </button>
+            </div>
+
+            <div id="calendario-container" style="background: white; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; overflow: hidden;">
+                <div style="max-width: 100%; max-height: 700px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <table class="calendar-table" style="width: 100%; border-collapse: collapse;">
+                        <thead style="position: sticky; top: 0; background-color: #f3f4f6; z-index: 10;">
+                            <tr style="background-color: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 0.8rem; text-align: left;">Data</th>
+                                <th style="padding: 0.8rem; text-align: left;">Casa</th>
+                                <th style="padding: 0.8rem; text-align: center;">Risultato</th>
+                                <th style="padding: 0.8rem; text-align: left;">Ospite</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if partite %}
+                                {% for partita in partite %}
+                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 0.8rem;">{{ partita.data.strftime('%d/%m/%Y') }}</td>
+                                <td style="padding: 0.8rem;"><strong>{{ partita.casa }}</strong></td>
+                                <td style="padding: 0.8rem; text-align: center;" class="result">
+                                    {% if partita.risultato %}
+                                        {{ partita.risultato }}
+                                    {% else %}
+                                        <span style="color: #9ca3af;">-</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.8rem;">{{ partita.ospite }}</td>
+                            </tr>
+                                {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 20px;">Nessuna partita trovata.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    table tr:hover {
+        background-color: #f9fafb;
+    }
+    .btn-primary:hover {
+        background-color: #0063a0 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 119, 182, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    div[style*="max-height: 700px"]::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    div[style*="max-height: 700px"]::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+    
+    div[style*="max-height: 700px"]::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+    
+    div[style*="max-height: 700px"]::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
+
+<script>
+function aggiornaCalendario() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '⏳ Aggiornamento...';
+    
+    fetch('/aggiorna_calendario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            btn.textContent = '✅ Aggiornato!';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            btn.textContent = '❌ Errore';
+            alert('Errore: ' + data.message);
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = '🔄 Aggiorna Calendario';
+            }, 2000);
+        }
+    })
+    .catch(err => {
+        console.error('Errore:', err);
+        btn.textContent = '❌ Errore';
+        btn.disabled = false;
+    });
+}
+</script>
+
+{% endblock %}

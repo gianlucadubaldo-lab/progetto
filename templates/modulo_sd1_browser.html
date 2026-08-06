@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 2rem auto; padding: 0 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.2rem; flex-wrap: wrap;">
+        <h2 style="margin: 0; color: #0f172a;">Archivio Moduli SD/1</h2>
+        <a href="{{ url_for('moduli.nuovo_modulo_sd1') }}" class="btn btn-primary" style="text-decoration: none;">+ Nuovo modulo SD/1</a>
+    </div>
+
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left;">
+                        <th style="padding: 0.9rem; white-space: nowrap;">Data creazione</th>
+                        <th style="padding: 0.9rem; white-space: nowrap;">Manifestazione</th>
+                        <th style="padding: 0.9rem; white-space: nowrap;">Societa</th>
+                        <th style="padding: 0.9rem; white-space: nowrap;">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="sd1-rows">
+                    <tr>
+                        <td colspan="4" style="padding: 1.2rem; color: #64748b; text-align: center;">Caricamento moduli...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function escHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+async function loadSd1List() {
+    const tbody = document.getElementById('sd1-rows');
+    try {
+        const res = await fetch('/api/moduli/sd1');
+        const data = await res.json();
+
+        if (!data.success) {
+            throw new Error(data.message || 'Errore caricamento');
+        }
+
+        if (!data.moduli || data.moduli.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 1.2rem; color: #64748b; text-align: center;">Nessun modulo SD/1 presente.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.moduli.map((m) => {
+            const manifestazione = m.manifestazione_label || '-';
+            const societa = m.societa_label || '-';
+            return `
+                <tr style="border-top: 1px solid #f1f5f9;">
+                    <td style="padding: 0.9rem;">${escHtml(m.data_creazione || '-')}</td>
+                    <td style="padding: 0.9rem;">${escHtml(manifestazione)}</td>
+                    <td style="padding: 0.9rem;">${escHtml(societa)}</td>
+                    <td style="padding: 0.9rem; white-space: nowrap;">
+                        <a href="/modulo_sd1/${m._id}?view=1" style="color: #0ea5e9; margin-right: 0.8rem; text-decoration: none;">Visualizza</a>
+                        <a href="/modulo_sd1/${m._id}" style="color: #0284c7; margin-right: 0.8rem; text-decoration: none;">Modifica</a>
+                        <button type="button" onclick="deleteSd1('${m._id}')" style="background: #ef4444; color: #fff; border: 0; border-radius: 6px; padding: 0.35rem 0.6rem; cursor: pointer;">Elimina</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="padding: 1.2rem; color: #dc2626; text-align: center;">${escHtml(err.message)}</td></tr>`;
+    }
+}
+
+async function deleteSd1(id) {
+    if (!confirm('Confermi eliminazione del modulo SD/1?')) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/moduli/sd1/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!data.success) {
+            throw new Error(data.message || 'Errore eliminazione');
+        }
+        loadSd1List();
+    } catch (err) {
+        alert('Errore: ' + err.message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadSd1List);
+</script>
+{% endblock %}

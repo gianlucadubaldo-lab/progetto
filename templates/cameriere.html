@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="cameriere-container">
+    <div class="cameriere-header">
+        <h2>Ricerca Ordini - {{ username }}</h2>
+    </div>
+
+    <div class="search-form">
+        <form method="POST" style="display: flex; gap: 1rem; flex: 1;">
+            <input type="text" name="query" placeholder="Cerca per numero ordine..." style="flex: 1;">
+            <button type="submit">Cerca</button>
+        </form>
+        
+        {% if ricerca_effettuata %}
+            <form method="POST" action="{{ url_for('cameriere.pulisci_lista') }}">
+                <button type="submit" style="background-color: #ef4444;">Pulisci Lista</button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="ordini-container">
+        {% if ricerca_effettuata %}
+            {% if ordini %}
+                <ul>
+                    {% for ordine in ordini %}
+                        <li class="ordine-box" id="ordine-{{ ordine._id }}" onclick="toggleDettagli('{{ ordine._id }}')">
+                            <div class="ordine-header">
+                                <span><strong>Ordine #{{ ordine.numero }}</strong></span>
+                                <form method="POST"
+                                      action="{{ url_for('nascondi_ordine', ordine_id=ordine._id) }}"
+                                      onClick="event.stopPropagation();"
+                                      style="display:inline;">
+                                    <button type="submit" class="rimuovi-btn">Rimuovi</button>
+                                </form>
+                            </div>
+                            
+                            <div class="nota-section" onclick="event.stopPropagation();">
+                                <label for="nota-{{ ordine._id }}" class="nota-label">
+                                    📝 Note per l'ordine:
+                                </label>
+                                <textarea 
+                                    placeholder="Scrivi qui eventuali note per questo ordine..."
+                                    oninput="salvaNotaLocalmente('{{ ordine._id }}', this.value)"
+                                    id="nota-{{ ordine._id }}"
+                                    class="nota-textarea"
+                                ></textarea>
+                            </div>
+                            
+                            <div id="dettagli-{{ ordine._id }}" class="ordine-dettagli" style="display:none;">
+                                <ul>
+                                    {% for item in ordine.dettagli %}
+                                        <li>{{ item.quantita }}x <a href="javascript:void(0);" class="prodotto-link" onclick="event.stopPropagation(); toggleProdotto(this);">{{ item.nome }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="text-align: center; color: #6b7280; font-style: italic;">Nessun ordine trovato.</p>
+            {% endif %}
+        {% else %}
+            <p style="text-align: center; color: #6b7280; font-style: italic;">Effettua una ricerca per visualizzare gli ordini.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function toggleDettagli(id) {
+        const elem = document.getElementById("dettagli-" + id);
+        const ordineBox = document.getElementById("ordine-" + id);
+        
+        if (elem) {
+            if (elem.style.display === "none") {
+                elem.style.display = "block";
+                ordineBox.classList.add("clicked");
+                // Salva lo stato nel localStorage
+                localStorage.setItem('ordine_' + id + '_open', 'true');
+            } else {
+                elem.style.display = "none";
+                ordineBox.classList.remove("clicked");
+                // Rimuovi lo stato dal localStorage
+                localStorage.removeItem('ordine_' + id + '_open');
+            }
+        }
+    }
+
+    function toggleProdotto(element) {
+        // Toggle della classe per il prodotto cliccato
+        element.classList.toggle('prodotto-selected');
+        
+        // Salva lo stato nel localStorage
+        const prodottoId = element.textContent.trim();
+        const ordineId = element.closest('[id^="ordine-"]').id.replace('ordine-', '');
+        const storageKey = 'prodotto_' + ordineId + '_' + prodottoId;
+        const isSelected = element.classList.contains('prodotto-selected');
+        
+        if (isSelected) {
+            localStorage.setItem(storageKey, 'selected');
+        } else {
+            localStorage.removeItem(storageKey);
+        }
+    }
+
+    // Ripristina lo stato al caricamento della pagina
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ripristina ordini aperti
+        document.querySelectorAll('[id^="ordine-"]').forEach(function(ordineBox) {
+            const ordineId = ordineBox.id.replace('ordine-', '');
+            const isOpen = localStorage.getItem('ordine_' + ordineId + '_open');
+            
+            if (isOpen === 'true') {
+                const dettagli = document.getElementById('dettagli-' + ordineId);
+                if (dettagli) {
+                    dettagli.style.display = 'block';
+                    ordineBox.classList.add('clicked');
+                }
+            }
+        });
+
+        // Ripristina prodotti selezionati
+        document.querySelectorAll('.prodotto-link').forEach(function(link) {
+            const prodottoId = link.textContent.trim();
+            const ordineId = link.closest('[id^="ordine-"]').id.replace('ordine-', '');
+            const storageKey = 'prodotto_' + ordineId + '_' + prodottoId;
+            const isSelected = localStorage.getItem(storageKey);
+            
+            if (isSelected === 'selected') {
+                link.classList.add('prodotto-selected');
+            }
+        });
+    });
+    function salvaNotaLocalmente(ordineId, testoNota) {
+    localStorage.setItem('nota_ordine_' + ordineId, testoNota);
+}
+
+function caricaNoteOrdini() {
+    document.querySelectorAll('[id^="nota-"]').forEach(function(areaNota) {
+        const ordineId = areaNota.id.replace('nota-', '');
+        const notaSalvata = localStorage.getItem('nota_ordine_' + ordineId);
+        if (notaSalvata !== null) {
+            areaNota.value = notaSalvata;
+        }
+    });
+}
+
+// Chiama la funzione quando la pagina è pronta
+document.addEventListener('DOMContentLoaded', caricaNoteOrdini);
+
+</script>
+
+{% endblock %}

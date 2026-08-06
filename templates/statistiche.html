@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Dati nascosti per i grafici -->
+<div id="chart-data" 
+     data-giorni='{{ giorni_labels | tojson | forceescape }}'
+     data-incassi='{{ incassi_values | tojson | forceescape }}'
+     data-prodotti-labels='{{ prodotti_labels | tojson | forceescape }}'
+     data-prodotti-values='{{ prodotti_values | tojson | forceescape }}'
+     data-orari-labels='{{ orari_labels | tojson | forceescape }}'
+     data-orari-values='{{ orari_values | tojson | forceescape }}'
+     style="display: none;">
+</div>
+
+<div class="stats-page-container" style="max-width: 1200px; margin: 2rem auto; padding: 0 1rem;">
+    <h2 style="color: #0077B6; margin-bottom: 2rem; text-align: center;">Dashboard Statistiche (Ultimi 30 Giorni)</h2>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+        <div class="kpi-card">
+            <h3>Totale Incasso</h3>
+            <div class="value">€ {{ '%.2f'|format(totale_incasso) }}</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Numero Ordini</h3>
+            <div class="value">{{ totale_ordini }}</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Scontrino Medio</h3>
+            <div class="value">€ {{ '%.2f'|format(media_ordine) }}</div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 2rem;">
+        
+        <!-- Grafico Vendite Giornaliere -->
+        <div class="chart-container">
+            <h3>Andamento Vendite</h3>
+            <canvas id="salesChart"></canvas>
+        </div>
+
+        <!-- Grafico Top Prodotti -->
+        <div class="chart-container">
+            <h3>Top 10 Prodotti</h3>
+            <canvas id="productsChart"></canvas>
+        </div>
+
+        <!-- Grafico Orari -->
+        <div class="chart-container" style="grid-column: 1 / -1;">
+            <h3>Affluenza per Orario</h3>
+            <canvas id="hoursChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+
+    <!-- Sezione Spettatori Partite -->
+    <div class="charts-grid" style="display: grid; grid-template-columns: 1fr; gap: 2rem; margin-top: 2rem;">
+        <div class="chart-container">
+            <h3>👥 Spettatori per Partita (Biglietti Venduti)</h3>
+            <div id="partite-container" style="max-width: 100%; max-height: 700px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; background-color: #f3f4f6; z-index: 10;">
+                        <tr style="background-color: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 0.8rem; text-align: left; color: #374151; font-weight: 600;">Data</th>
+                            <th style="padding: 0.8rem; text-align: left; color: #374151; font-weight: 600;">Casa</th>
+                            <th style="padding: 0.8rem; text-align: center; color: #374151; font-weight: 600;">Risultato</th>
+                            <th style="padding: 0.8rem; text-align: left; color: #374151; font-weight: 600;">Ospite</th>
+                            <th style="padding: 0.8rem; text-align: center; color: #374151; font-weight: 600;">Spettatori 👥</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if partite_spettatori %}
+                            {% for partita in partite_spettatori %}
+                                {% if partita.is_casa %}
+                            <tr style="border-bottom: 1px solid #e5e7eb; transition: background-color 0.2s;">
+                                <td style="padding: 0.8rem; color: #374151;">{{ partita.data }}</td>
+                                <td style="padding: 0.8rem; font-weight: 600; color: #0077B6;">{{ partita.casa }}</td>
+                                <td style="padding: 0.8rem; text-align: center; font-weight: 700; color: #059669;">
+                                    {% if partita.risultato %}
+                                        {{ partita.risultato }}
+                                    {% else %}
+                                        <span style="color: #9ca3af;">-</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 0.8rem; color: #374151;">{{ partita.ospite }}</td>
+                                <td style="padding: 0.8rem; text-align: center; font-weight: 700; color: #0077B6;"
+                                    class="{% if partita.spettatori > 0 %}spettatori-filled{% else %}spettatori-empty{% endif %}">
+                                    {{ partita.spettatori }}
+                                </td>
+                            </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="padding: 2rem; text-align: center; color: #9ca3af;">
+                                Nessuna partita trovata nel calendario.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #partite-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #partite-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        
+        #partite-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        #partite-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</div>
+
+<style>
+    .kpi-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    }
+    .kpi-card h3 {
+        color: #6b7280;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+    .kpi-card .value {
+        color: #0077B6;
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+
+    .chart-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border: 1px solid #e5e7eb;
+    }
+    .chart-container h3 {
+        color: #374151;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        border-bottom: 2px solid #f3f4f6;
+        padding-bottom: 0.5rem;
+    }
+
+    .spettatori-filled {
+        background-color: #e0f2fe;
+    }
+    .spettatori-empty {
+        background-color: #f3f4f6;
+    }
+</style>
+
+<script>
+    // Recupera dati dal DOM
+    const dataEl = document.getElementById('chart-data');
+    const giorniLabels = JSON.parse(dataEl.dataset.giorni);
+    const incassiValues = JSON.parse(dataEl.dataset.incassi);
+    const prodottiLabels = JSON.parse(dataEl.dataset.prodottiLabels);
+    const prodottiValues = JSON.parse(dataEl.dataset.prodottiValues);
+    const orariLabels = JSON.parse(dataEl.dataset.orariLabels);
+    const orariValues = JSON.parse(dataEl.dataset.orariValues);
+
+    // Configurazione comune
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#6b7280';
+
+    // 1. Grafico Vendite (Line)
+    new Chart(document.getElementById('salesChart'), {
+        type: 'line',
+        data: {
+            labels: giorniLabels,
+            datasets: [{
+                label: 'Incasso (€)',
+                data: incassiValues,
+                borderColor: '#0077B6',
+                backgroundColor: 'rgba(0, 119, 182, 0.1)',
+                borderWidth: 3,
+                tension: 0.3,
+                fill: true,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#0077B6',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { borderDash: [2, 4] } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 2. Grafico Prodotti (Bar orizzontale)
+    new Chart(document.getElementById('productsChart'), {
+        type: 'bar',
+        data: {
+            labels: prodottiLabels,
+            datasets: [{
+                label: 'Quantità Venduta',
+                data: prodottiValues,
+                backgroundColor: [
+                    '#0077B6', '#0096c7', '#00b4d8', '#48cae4', '#90e0ef',
+                    '#ade8f4', '#caf0f8', '#dbeafe', '#eff6ff', '#f0f9ff'
+                ],
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } }
+        }
+    });
+
+    // 3. Grafico Orari (Bar verticale)
+    new Chart(document.getElementById('hoursChart'), {
+        type: 'bar',
+        data: {
+            labels: orariLabels,
+            datasets: [{
+                label: 'Ordini',
+                data: orariValues,
+                backgroundColor: '#00B4D8',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+{% endblock %}

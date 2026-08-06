@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='cassa.css') }}">
+
+<div class="pos-container">
+    <div class="pos-left">
+        <div class="pos-cart">
+            <div class="nota-wrapper">
+                <input id="nota" type="text" placeholder="✏️ Nota scontrino (opzionale)">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-del">❌</th>
+                        <th class="col-prod">Prodotto</th>
+                        <th class="col-qty">Q.tà</th>
+                        <th class="col-price">€ Prezzo</th>
+                    </tr>
+                </thead>
+                <tbody id="carrello">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pos-summary">
+            <div><strong>Totale da Pagare: €<span id="totale">0.00</span></strong></div>
+        </div>
+
+        <div class="pos-actions">
+            <button class="btn-cancel" onclick="svuotaCarrello()">🗑️ Svuota Carrello</button>
+            <button class="btn-metodo btn-action" id="btn-contanti" onclick="selezionaMetodoPagamento('contanti')">💶 Contanti</button>
+            <button class="btn-metodo btn-action" id="btn-pos" onclick="selezionaMetodoPagamento('pos')">💳 POS</button>
+            <button class="btn-pay btn-action" onclick="confermaPagamento()">✓ PAGA ORA</button>
+        </div>
+    </div>
+
+    <div class="pos-right">
+        <div class="tab-selector" id="category-modal">
+            <button class="tab active" onclick="switchTab('liquori')">🍷 Liquori</button>
+            <button class="tab" onclick="switchTab('bevande')">🥤 Bevande</button>
+            <button class="tab" onclick="switchTab('caffetteria')">☕ Caffetteria</button>
+            <button class="tab" onclick="switchTab('snack')">🥨 Snack</button>
+            <button class="tab" onclick="switchTab('panini')">🥪 Panini</button>
+            <button class="tab" onclick="switchTab('antipasto')">🍲 Antipasto</button>
+            <button class="tab" onclick="switchTab('primi')">🍝 Primi</button>
+            <button class="tab" onclick="switchTab('secondi')">🍖 Secondi</button>
+            <button class="tab" onclick="switchTab('contorni')">🥗 Contorni</button>
+            <button class="tab" onclick="switchTab('caffe')">☕ Caffè</button>
+            <button class="tab" onclick="switchTab('vino')">🍷 Vino</button>
+            <button class="tab" onclick="switchTab('biglietteria')">🎟️ Biglietteria</button>
+            <button class="tab" onclick="switchTab('gelati')">🍦 Gelati</button>
+        </div>
+        
+
+        <div class="product-grid-wrapper">
+            <div class="product-grid" id="product-grid">
+                </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const prodottiCategorizzati = JSON.parse('{{ prodotti_categorizzati | tojson | safe }}');
+let metodoPagamento = null; 
+
+function selezionaMetodoPagamento(metodo) {
+    metodoPagamento = metodo;
+    document.getElementById('btn-pos').classList.remove('active');
+    document.getElementById('btn-contanti').classList.remove('active');
+    
+    if (metodo === 'pos') {
+        document.getElementById('btn-pos').classList.add('active');
+    } else if (metodo === 'contanti') {
+        document.getElementById('btn-contanti').classList.add('active');
+    }
+}
+
+function switchTab(categoria) {
+    resetMessaggioErrore(); 
+    const grid = document.getElementById('product-grid');
+    grid.innerHTML = '';
+
+    const lista = prodottiCategorizzati[categoria] || [];
+
+    if (lista.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #999;">Nessun prodotto in questa categoria</div>';
+        return;
+    }
+
+    lista.forEach(prodotto => {
+        const btn = document.createElement('div');
+        btn.className = 'product-btn';
+        btn.innerHTML = `
+            <div>${prodotto.nome}</div>
+            <div>€${prodotto.prezzo.toFixed(2)}</div>
+        `;
+        btn.onclick = () => aggiungiACarrelloConControllo(prodotto, btn);
+        grid.appendChild(btn);
+    });
+
+    // Aggiorna lo stile del tab attivo
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    try { 
+        if(event && event.target) event.target.classList.add('active'); 
+    } catch(e){}
+}
+
+function aggiungiACarrello(prodotto, quantita = 1) {
+    const tbody = document.getElementById('carrello');
+    const rigaEsistente = [...tbody.querySelectorAll('tr')].find(row => row.dataset.id === prodotto._id);
+
+    if (rigaEsistente) {
+        const btnPlus = rigaEsistente.querySelector('.btn-qty-plus');
+        btnPlus.click(); // Aumenta di 1
+        aggiornaTotali();
+    } else {
+        const tr = document.createElement('tr');
+        tr.dataset.id = prodotto._id;
+        tr.innerHTML = `
+            <td class="col-del">
+                <button class="btn-cart-delete" onclick="this.closest('tr').remove(); aggiornaTotali();" title="Elimina prodotto">×</button>
+            </td>
+            <td class="cart-nome col-prod">${prodotto.nome}</td>
+            <td class="col-qty">
+                <div class="cart-qty-container">
+                    <button class="btn-qty-change btn-qty-minus" onclick="modificaQuantita(this, -1)" title="Riduci quantità">−</button>
+                    <span class="cart-qty-display">${quantita}</span>
+                    <button class="btn-qty-change btn-qty-plus" onclick="modificaQuantita(this, 1)" title="Aumenta quantità">+</button>
+                </div>
+            </td>
+            <td class="col-price">
+                <input type="number" class="price-input" value="${prodotto.prezzo.toFixed(2)}" step="0.01" onchange="aggiornaTotali()" readonly>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        aggiornaTotali();
+    }
+}
+
+function modificaQuantita(button, delta) {
+    const tr = button.closest('tr');
+    const display = tr.querySelector('.cart-qty-display');
+    let qta = parseInt(display.textContent);
+    
+    qta += delta;
+    
+    // Minimo 1, massimo illimitato
+    if (qta < 1) qta = 1;
+    
+    display.textContent = qta;
+    aggiornaTotali();
+}
+
+function aggiungiACarrelloConControllo(prodotto, bottone) {
+    resetMessaggioErrore();
+    // Aggiungi direttamente senza controllo di disponibilità
+    bottone.classList.remove('errore');
+    aggiungiACarrello(prodotto);
+}
+
+function resetMessaggioErrore() {
+    document.querySelectorAll('.product-btn.errore').forEach(btn => btn.classList.remove('errore'));
+    const errorBox = document.getElementById('errore-disponibilita');
+    if (errorBox) errorBox.remove();
+}
+
+function showMessaggioErrore(testo) {
+    const existing = document.getElementById('errore-disponibilita');
+    if (existing) existing.remove();
+    const container = document.querySelector('.product-grid') || document.body;
+    const div = document.createElement('div');
+    div.id = 'errore-disponibilita';
+    div.textContent = testo;
+    div.style.cssText = `
+        color: #dc2626;
+        padding: 1rem;
+        font-weight: bold;
+        text-align: center;
+        background: #fee2e2;
+        border: 2px solid #dc2626;
+        border-radius: 0.8rem;
+        margin-bottom: 1rem;
+    `;
+    container.prepend(div);
+    
+    // Auto-rimuovi dopo 3 secondi
+    setTimeout(() => {
+        if (div && div.parentNode) div.remove();
+    }, 3000);
+}
+
+function aggiornaTotali() {
+    let totale = 0;
+    let count = 0;
+    const righe = document.querySelectorAll('#carrello tr');
+
+    righe.forEach(row => {
+        const display = row.querySelector('.cart-qty-display');
+        const priceInput = row.querySelector('.price-input');
+        
+        if (!display || !priceInput) return;
+        
+        const qta = parseInt(display.textContent) || 0;
+        const prezzo = parseFloat(priceInput.value) || 0;
+
+        if (qta > 0 && prezzo > 0) {
+            totale += qta * prezzo;
+            count += qta;
+        }
+    });
+
+    document.getElementById('totale').textContent = totale.toFixed(2);
+}
+
+function confermaPagamento() {
+    if (!metodoPagamento) {
+        alert('Seleziona un metodo di pagamento (POS o Contanti)');
+        return;
+    }
+    
+    const righe = document.querySelectorAll('#carrello tr');
+    
+    if (righe.length === 0) {
+        alert('Il carrello è vuoto!');
+        return;
+    }
+    
+    const prodotti = [];
+    let totale = 0;
+
+    righe.forEach(row => {
+        const id = row.dataset.id;
+        const nome = row.querySelector('.cart-nome')?.innerText || '';
+        const qtaDisplay = row.querySelector('.cart-qty-display');
+        const quantita = parseInt(qtaDisplay?.textContent || '0');
+        const prezzInput = row.querySelector('.price-input');
+        const prezzo = parseFloat(prezzInput?.value || '0');
+        
+        console.log(`Prodotto: ${nome}, Qta: ${quantita}, Prezzo: ${prezzo}`);
+        
+        if (quantita > 0 && prezzo > 0) {
+            const totaleItem = quantita * prezzo;
+            prodotti.push({ _id: id, nome, prezzo, quantita });
+            totale += totaleItem;
+        }
+    });
+
+    console.log(`Totale calcolato: ${totale}, Prodotti: ${prodotti.length}`);
+    
+    if (totale === 0 || prodotti.length === 0) {
+        alert('Errore: il totale è 0 o non ci sono prodotti nel carrello');
+        return;
+    }
+
+    const pagato = totale;
+    const nota = (document.getElementById('nota')?.value || '').trim();
+    
+    console.log(`Inviando al server - Totale: ${totale}, Pagato: ${pagato}, Metodo: ${metodoPagamento}`);
+    
+    fetch("/conferma_pagamento", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prodotti, totale, pagato, nota, metodoPagamento })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('Risposta server:', data);
+        if (data.success) {
+            const notaEl = document.getElementById('nota'); 
+            if(notaEl) notaEl.value = '';
+            window.location.href = `/ricevuta/${data.ordine_id}`;
+        } else {
+            alert("Errore durante il pagamento: " + (data.message || "Pagamento fallito."));
+        }
+    })
+    .catch(err => {
+        console.error('Errore fetch:', err);
+        alert('Errore nella comunicazione con il server: ' + err.message);
+    });
+}
+
+function svuotaCarrello() {
+    document.getElementById('carrello').innerHTML = '';
+    metodoPagamento = null;
+    document.getElementById('btn-pos').classList.remove('active');
+    document.getElementById('btn-contanti').classList.remove('active');
+    aggiornaTotali();
+}
+
+switchTab('liquori');
+</script>
+
+{% endblock %}

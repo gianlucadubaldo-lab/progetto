@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display:flex; gap:2rem; flex-wrap:wrap; justify-content:center;">
+  <div class="settings-form" style="min-width:320px; max-width:680px;">
+      <h2>Crea nuovo utente</h2>
+      <form method="POST">
+          <input type="text" name="username" placeholder="Username" required><br>
+          <input type="password" name="password" placeholder="Password" required><br>
+          <select name="role" required>
+              <option value="admin">Admin</option>
+              <option value="cameriere">Cameriere</option>
+          </select><br>
+          <button type="submit">Crea Utente</button>
+      </form>
+      {% if message %}
+          <p class="success-message">{{ message }}</p>
+      {% endif %}
+  </div>
+
+  <div class="settings-form" style="min-width:320px; max-width:680px;">
+    <h2>Impostazioni Società</h2>
+    <form method="POST" action="{{ url_for('admin.impostazioni_societa') }}">
+      <label>Ragione Sociale</label>
+      <input type="text" name="ragione_sociale" value="{{ dati.ragione_sociale or '' }}" required>
+
+      <label>Indirizzo completo</label>
+      <input type="text" name="indirizzo" value="{{ dati.indirizzo or '' }}">
+
+      <label>Sede legale</label>
+      <input type="text" name="sede_legale" value="{{ dati.sede_legale or '' }}">
+
+      <label>CAP</label>
+      <input type="text" name="cap" value="{{ dati.cap or '' }}">
+
+      <label>Comune</label>
+      <input type="text" name="comune" value="{{ dati.comune or '' }}">
+
+      <label>Provincia</label>
+      <input type="text" name="provincia" value="{{ dati.provincia or '' }}">
+
+      <label>Partita IVA / Codice Fiscale</label>
+      <input type="text" name="partita_iva" value="{{ dati.partita_iva or '' }}">
+
+      <label>Telefono</label>
+      <input type="text" name="telefono" value="{{ dati.telefono or '' }}">
+
+      <label>Rappresentante legale</label>
+      <input type="text" name="rappresentante_legale" value="{{ dati.rappresentante_legale or '' }}">
+
+      <label>Codice fiscale rappresentante</label>
+      <input type="text" name="codice_fiscale_rappresentante" value="{{ dati.codice_fiscale_rappresentante or '' }}">
+
+      <label>Residenza rappresentante</label>
+      <input type="text" name="residenza_rappresentante" value="{{ dati.residenza_rappresentante or '' }}">
+
+      <label>Comune rappresentante</label>
+      <input type="text" name="comune_rappresentante" value="{{ dati.comune_rappresentante or '' }}">
+
+      <label>Provincia rappresentante</label>
+      <input type="text" name="provincia_rappresentante" value="{{ dati.provincia_rappresentante or '' }}">
+
+      <label>Impianto</label>
+      <input type="text" name="impianto" value="{{ dati.impianto or '' }}">
+
+      <label>Tipo manifestazione</label>
+      <input type="text" name="manifestazione_tipo" value="{{ dati.manifestazione_tipo or '' }}">
+
+      <label>Incontro manifestazione</label>
+      <input type="text" name="manifestazione_incontro" value="{{ dati.manifestazione_incontro or '' }}">
+
+      <label>Polisportiva manifestazione</label>
+      <input type="text" name="manifestazione_polisportiva" value="{{ dati.manifestazione_polisportiva or '' }}">
+
+      <label>Messaggio scontrino</label>
+      <input type="text" name="messaggio_scontrino" value="{{ dati.messaggio_scontrino or '' }}">
+
+      <div style="margin: 1rem 0;">
+          <label style="display:flex; align-items:center; gap:.5rem;">
+              <input type="checkbox" name="azzera_ordini_chiusura" value="1" {% if dati.azzera_ordini_chiusura == '1' %}checked{% endif %}>
+              Azzera numero ordine (#0) ad ogni chiusura giornaliera
+          </label>
+      </div>
+
+      <button type="submit">Salva Dati Società</button>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <p class="{{ category }}">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+</div>
+{% endblock %}

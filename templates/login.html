@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Kiosk</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="login-body">
+  <!-- INTRO -->
+  <div class="intro">
+      <h1 class="logo">
+          <span class="letter">K</span>
+          <span class="letter i-letter">
+            <span class="i-stem">l</span> <!-- corpo della "i", stile da "i" -->
+            <span class="dot"></span>     <!-- punto rosso -->
+          </span>
+          <span class="letter">o</span>
+          <span class="letter">s</span>
+          <span class="letter">k</span>
+      </h1>
+  </div>
+
+    <h1 class="welcome-title hidden">Benvenuto in Kiosk</h1>
+    <div class="login-box hidden main-content">
+        <h2 class="login-heading"><i class="fas fa-user-circle"></i> Accedi</h2>
+        <form method="POST" class="login-form">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="username" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary login-btn">Accedi</button>
+            <a href="{{ url_for('cameriere.login_cameriere') }}" class="quick-login">
+                <i class="fas fa-concierge-bell"></i> Entra come cameriere
+            </a>
+        </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <p class="{{ category }}">{{ message }}</p>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+</body>
+<script>
+  setTimeout(() => {
+    document.querySelector('.intro').style.display = 'none';
+    document.querySelectorAll('.welcome-title, .login-box').forEach(el => {
+      el.classList.remove('hidden');
+      el.classList.add('main-content'); // Applica fadeIn
+    });
+  }, 5000); // leggero delay in più per evitare flicker
+</script>
+
+
+</html>

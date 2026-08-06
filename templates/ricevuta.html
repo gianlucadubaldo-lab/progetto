@@ -1,0 +1,300 @@
+
+
+{% block content %}
+<style>
+    /* ============================================
+       PRINT STYLES - Mostra SOLO la ricevuta
+       ============================================ */
+    @media print {
+        * {
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
+        }
+        
+        html, body {
+            width: 100% !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+        }
+        
+        /* Nascondi TUTTO tranne la ricevuta */
+        
+        /* Mostra SOLO il blocco print */
+        #receipt-print-area {
+            display: block !important;
+            position: static !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+        }
+        
+        #receipt-print-area > * {
+            display: block !important;
+        }
+        
+        /* Ricevuta a 80mm (formato termica) */
+        .receipt-container {
+            width: 80mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+        }
+        
+        .receipt {
+            width: 100% !important;
+            padding: 3mm !important;
+            background: white !important;
+            font-size: 8pt !important;
+            font-family: 'Courier New', monospace !important;
+            line-height: 1.1 !important;
+            color: black !important;
+            margin: 0 !important;
+        }
+        
+        .receipt h1 {
+            font-size: 10pt !important;
+            font-weight: bold !important;
+            margin: 0 !important;
+            padding: 1mm 0 !important;
+            text-align: center !important;
+        }
+        
+        .receipt hr {
+            border: none !important;
+            border-top: 1px solid #000 !important;
+            margin: 1mm 0 !important;
+        }
+        
+        .receipt-table {
+            width: 100% !important;
+            font-size: 7pt !important;
+            margin: 1mm 0 !important;
+            border-collapse: collapse !important;
+        }
+        
+        .receipt-table th,
+        .receipt-table td {
+            padding: 0.3mm 0.5mm !important;
+            border: none !important;
+            background: white !important;
+            color: black !important;
+        }
+        
+        .receipt-table th {
+            border-bottom: 1px solid #000 !important;
+            font-weight: bold !important;
+            text-align: left !important;
+        }
+        
+        .receipt-table td {
+            text-align: left !important;
+        }
+        
+        .qty-col, .price-col, .total-col {
+            text-align: right !important;
+        }
+        
+        .receipt-meta-inline {
+            font-size: 7pt !important;
+            margin: 0.5mm 0 !important;
+        }
+        
+        .meta-left {
+            display: block !important;
+        }
+        
+        .meta-note {
+            display: block !important;
+            text-align: center !important;
+            font-weight: bold !important;
+            margin-top: 0.5mm !important;
+        }
+        
+        .right {
+            text-align: right !important;
+            font-weight: bold !important;
+            margin: 0.5mm 0 !important;
+        }
+        
+        .center {
+            text-align: center !important;
+            margin: 0.5mm 0 !important;
+        }
+        
+        small {
+            font-size: 6pt !important;
+        }
+        
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
+    }
+    
+    /* ============================================
+       SCREEN STYLES - Anteprima
+       ============================================ */
+    @media screen {
+        #receipt-print-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 2rem;
+        }
+        
+        .receipt-container {
+            max-width: 300px;
+            width: 100%;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    }
+    
+    /* ============================================
+       STILI COMUNI
+       ============================================ */
+    .receipt {
+        font-family: 'Courier New', monospace;
+        line-height: 1.3;
+        background: white;
+        color: black;
+        width: 100%;
+    }
+    
+    .receipt h1 {
+        text-align: center;
+        font-size: 1rem;
+        margin: 0.3rem 0;
+        font-weight: bold;
+    }
+    
+    .receipt hr {
+        border: none;
+        border-top: 1px solid #000;
+        margin: 0.3rem 0;
+    }
+    
+    .receipt-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.5rem 0;
+        font-size: 0.85rem;
+    }
+    
+    .receipt-table th,
+    .receipt-table td {
+        padding: 0.2rem 0.1rem;
+        text-align: left;
+        border: none;
+        background: white;
+    }
+    
+    .receipt-table th {
+        border-bottom: 1px solid #000;
+        font-weight: bold;
+    }
+    
+    .receipt-table td {
+        color: black;
+    }
+    
+    .receipt-meta-inline {
+        font-size: 0.75rem;
+        margin: 0.4rem 0;
+    }
+    
+    .meta-left {
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+    
+    .meta-note {
+        display: block;
+        text-align: center;
+        font-weight: bold;
+        margin-top: 0.2rem;
+    }
+    
+    .right {
+        text-align: right;
+        font-weight: bold;
+        margin: 0.3rem 0;
+    }
+    
+    .center {
+        text-align: center;
+        margin: 0.3rem 0;
+    }
+</style>
+
+<div id="receipt-print-area">
+    <div class="receipt-container">
+        <div class="receipt">
+            <h1>Pro Loco Semprioniano</h1>
+            <h1 style="font-size: 0.9rem; margin-bottom: 0.2rem;">Sagra della panzanella</h1>
+            <hr>
+            
+            <!-- Intestazione -->
+            <div class="receipt-meta-inline">
+                <div class="meta-left">
+                    <div>Data: {{ ordine.data_str }}</div>
+                    <div>Ora: {{ ordine.ora_str }}</div>
+                    <div>Ordine: {{ ordine.numero }}</div>
+                </div>
+                {% if ordine.nota %}
+                <div class="meta-note">{{ ordine.nota }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Tabella Prodotti -->
+            <table class="receipt-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Prodotto</th>
+                        <th style="width: 12%; text-align: right;">Q.tà</th>
+                        <th style="width: 18%; text-align: right;">Prezzo</th>
+                        <th style="width: 20%; text-align: right;">Totale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in ordine.prodotti %}
+                    <tr>
+                        <td>{{ item.nome }}</td>
+                        <td class="qty-col">{{ item.quantita }}</td>
+                        <td class="price-col">€{{ "%.2f"|format(item.prezzo) }}</td>
+                        <td class="total-col">€{{ "%.2f"|format(item.prezzo * item.quantita) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <hr>
+            <p class="right">Totale: €{{ "%.2f"|format(ordine.totale) }}</p>
+            <div class="center" style="margin-top: 0.3rem;">
+                <small>Grazie e arrivederci!</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        // Stampa subito
+        window.print();
+
+        // Dopo 2 secondi, torna alla cassa
+        setTimeout(function () {
+            window.location.href = "/cassa";
+        }, 2000);
+    };
+</script>
+
+{% endblock %}

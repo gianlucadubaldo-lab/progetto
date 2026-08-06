@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mod. SD-1 - Prospetto Riepilogativo Incassi</title>
+<style>
+  html,body{margin:0;padding:0;background:#fff;color:#000}
+  body{font-family:'Times New Roman', Times, serif;font-size:12px}
+  .page{width:210mm;min-height:297mm;margin:0 auto;padding:10mm 12mm;box-sizing:border-box}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(24,1fr);column-gap:3mm;row-gap:2.5mm;align-items:end}
+
+  /* header (come modello) */
+  .logo-wrap{grid-column:1/12;display:flex;flex-direction:row;align-items:center;gap:3mm}
+  .logo-img{height:15mm;width:auto;object-fit:contain}
+  .logo-text{font-weight:700;font-size:15px;line-height:1;margin-bottom:3mm}
+
+  /* text */
+  .h-left{grid-column:1/10;font-size:12px;font-weight:700}
+  .h-right{grid-column:17/25;text-align:right;font-size:11px}
+  .mod{font-weight:700}
+
+  .title{grid-column:1/25;text-align:center;margin-top:1mm}
+  .title .l1{font-size:14px;font-weight:700;letter-spacing:.2px}
+  .title .l2{font-size:12px;font-weight:700;margin-top:.8mm}
+
+  /* progressivo/foglio */
+  .num-wrap{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+  .num-label{font-size:11px}
+  .longbox{display:inline-grid;border:1px solid #000;height:18px}
+  .longbox.long3{grid-template-columns:repeat(3,18px)}
+  .longbox.long2{grid-template-columns:repeat(2,18px)}
+  .longbox span{display:none} /* sostituisco con input */
+  .longbox{gap:0}
+  .longbox input{width:100%;height:100%;border:0;background:transparent;text-align:center;font-family:monospace;font-size:12px;outline:none}
+  .longbox .cell{display:flex;align-items:center;justify-content:center;border-right:1px solid #000}
+  .longbox .cell:last-child{border-right:0}
+
+  hr.sep{grid-column:1/25;border:none;border-top:2px solid #000;margin:2mm 0 1mm}
+
+  /* labels + lines */
+  .label{font-size:11px;font-weight:700;white-space:nowrap}
+  .line{border-bottom:1px solid #000;padding:1mm 1mm 0.6mm;min-height:5mm}
+  input.inp{border:0;background:transparent;width:100%;font:inherit;outline:none}
+
+  /* date */
+  .date-head{display:flex;gap:14px;font-size:10px;justify-content:flex-start;margin-bottom:0.6mm}
+  .date-row{display:flex;gap:17px;align-items:center}
+  .box{width:18px;height:18px;border:1px solid #000;display:flex;align-items:center;justify-content:center;font-family:monospace}
+  .box input{width:100%;height:100%;border:0;background:transparent;text-align:center;font-family:monospace;font-size:11px;outline:none}
+  .box.box-year{width:34px}
+
+  /* CF boxes: visibili come nel modello */
+  .cf{display:flex;flex-direction:row;flex-wrap:nowrap;gap:0.8mm;align-items:flex-end;justify-content:space-evenly;white-space:nowrap}
+  .cf .c{box-sizing:border-box;width:18px;height:18px;border:1px solid #000 !important;background:#fff;
+         display:inline-flex;align-items:center;justify-content:center;overflow:hidden;
+         font-family:monospace;font-size:12px;line-height:1;color:#000}
+
+  /* CF editabile: solo rappresentante (le caselle diventano scrivibili) */
+  .cf.editable .c{cursor:text}
+  .cf.editable .c:focus{outline:2px solid #000; outline-offset:-2px}
+
+  /* Esercizio sociale */
+  .es-row{grid-column:1/25;display:grid;grid-template-columns:1fr 1fr;column-gap:10mm;align-items:center}
+  .es-line{display:flex;align-items:flex-end;gap:6mm}
+  .es-leftlbl{white-space:nowrap;font-size:11px;font-weight:700}
+  .es-topline{border-top:1px solid #000;height:0;flex:1}
+  .es-date .date-head{gap:12px;margin:0 0 0.4mm 0;font-size:9px}
+  .es-date .box{width:16px;height:16px}
+  .es-date .box.box-year{width:34px}
+
+  /* Capienza */
+  .cap-group{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;column-gap:2mm;align-items:end}
+  .cap-line{border-bottom:1px solid #000;height:16px}
+  .cap-num-wrap{display:flex;flex-direction:column;align-items:center;gap:1mm}
+  .cap-num-label{font-size:10px}
+  .cap-num{display:flex;gap:2px;align-items:end}
+  .cap-num .n{width:14px;height:16px;border:1px solid #000;background:transparent}
+  .cap-num .n input{width:100%;height:100%;border:0;background:transparent;text-align:center;font-family:monospace;font-size:11px;outline:none}
+
+  /* Table: rendi visibili le righe anche se vuote */
+  table{border-collapse:collapse;width:100%}
+  .tbl{grid-column:1/25;margin-top:2mm}
+  .tbl table{table-layout:fixed}
+  .tbl th,.tbl td{border:1px solid #000;padding:1.1mm 1.3mm;font-size:10.5px;vertical-align:middle}
+  .tbl thead th{font-weight:700;text-align:center}
+  .tbl .sub{font-size:9px;font-weight:400;line-height:1.1}
+  .tbl .colnums td{font-size:9px;text-align:center;padding:0.7mm 0}
+  .tbl input{width:100%;border:0;background:transparent;font:inherit;outline:none}
+
+  /* Signature boxed area */
+  .sigbox{grid-column:1/25;border:1px solid #000;margin-top:2.2mm;padding:2.5mm 3.5mm}
+  .sigrow{display:flex;align-items:flex-end;gap:10mm}
+  .sigleft{width:60mm}
+  .circle{width:34mm;height:22mm;border:1px solid #000;border-radius:18mm;margin:0 auto}
+  .sigline{border-top:1px solid #000;height:0;margin-top:10mm}
+  .sigcol{flex:1;text-align:center}
+  .siglbl{font-size:10px;margin-top:1mm}
+
+  .foot{grid-column:1/25;font-size:9px;margin-top:1.5mm}
+
+  /* controls */
+  .controls{position:fixed;right:18px;top:18px;display:flex;flex-direction:column;gap:8px;z-index:9999}
+  .controls button{padding:8px 12px;border-radius:6px;border:0;cursor:pointer;background:#0b74c6;color:#fff}
+  .controls .save{background:#10b981}
+  .controls .close{background:#ef4444}
+
+  /* Print */
+  @media print{
+    *{margin:0 !important;padding:0 !important;box-sizing:border-box !important}
+    .controls{display:none !important}
+    html,body{width:100% !important;height:auto !important;background:#fff !important}
+    .page{width:210mm !important;min-height:297mm !important;margin:0 !important;padding:6mm 8mm !important}
+    table, tr, td, th{break-inside:avoid;page-break-inside:avoid}
+    @page{size:A4;margin:0}
+    .foot{display:none !important}
+  }
+</style>
+</head>
+<body>
+
+<div class="controls no-print">
+  <button onclick="doPrint()">🖨️ Stampa</button>
+  <button id="btn-save" class="save" onclick="doSave()">💾 Salva</button>
+  <button id="btn-add-rows" onclick="addTicketRows(3)">+3 righe</button>
+  <button class="close" onclick="window.history.back()">✖ Chiudi</button>
+</div>
+
+<div class="page">
+  <div class="grid">
+    <!-- Header left with logo + text -->
+    <div class="logo-wrap">
+      <img class="logo-img" src="/static/logo-agenzia.png" alt="Logo">
+      <div class="logo-text">AGENZIA DELLE ENTRATE</div>
+    </div>
+
+    <div class="h-right">
+      <div class="mod">Mod. SD-1</div>
+      <div class="num-wrap" style="margin-top:2mm">
+        <div class="num-label">N. Progressivo</div>
+        <div class="longbox long3" id="progBox">
+          <div class="cell"><input id="prog1" maxlength="1" value="0"></div>
+          <div class="cell"><input id="prog2" maxlength="1" value="0"></div>
+          <div class="cell"><input id="prog3" maxlength="1" value="1"></div>
+        </div>
+        <div style="width:6px"></div>
+        <div class="num-label">Foglio n.</div>
+        <div class="longbox long2" id="foglioBox">
+          <div class="cell"><input id="foglio1" maxlength="1" value="0"></div>
+          <div class="cell"><input id="foglio2" maxlength="1" value="1"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="title">
+      <div class="l1">PROSPETTO RIEPILOGATIVO DEI TITOLI DI INGRESSO RILASCIATI PER CIASCUNA</div>
+      <div class="l2">MANIFESTAZIONE art. 5, comma 3, DPR 13 marzo 2002, n. 69</div>
+    </div>
+
+    <hr class="sep">
+
+    <!-- Manifestazione -->
+    <div style="grid-column:1/9">
+      <div class="label">Manifestazione</div>
+      <div class="date-head"><span>Giorno</span><span>Mese</span><span>Anno</span></div>
+      <div class="date-row">
+        <div class="box"><input id="man_giorno" maxlength="2"></div>
+        <div class="box"><input id="man_mese" maxlength="2"></div>
+        <div class="box box-year"><input id="man_anno" maxlength="4"></div>
+        <span class="label" style="margin-left:6mm">ore</span>
+        <div class="box" style="width:37px"><input id="man_ora" maxlength="5" placeholder="--:--"></div>
+      </div>
+    </div>
+
+    <div style="grid-column:9/13">
+      <div class="label">Tipo</div>
+      <div class="line"><input id="man_tipo" class="inp" value="Incontro di calcio"></div>
+    </div>
+
+    <div style="grid-column:13/19">
+      <div class="label">Incontro di calcio:</div>
+      <div class="line"><input id="man_incontro" class="inp" value="USD Semproniano"></div>
+    </div>
+
+    <div style="grid-column:19/25">
+      <div class="label">- Polisportiva</div>
+      <div class="line"><input id="man_polisportiva" class="inp" value="Scansano"></div>
+    </div>
+
+    <!-- Società / CF -->
+    <div style="grid-column:1/12">
+      <div class="label">Società/Associazione</div>
+      <div class="line"><input id="societa" class="inp" value="USD Semproniano"></div>
+    </div>
+
+    <div style="grid-column:12/25">
+      <div class="label">Cod. Fiscale</div>
+      <div class="cf" id="cfSocieta"></div>
+      <input id="cod_fiscale" class="inp" style="position:absolute;left:-9999px;opacity:0" value="92022000530">
+    </div>
+
+    <!-- Sede legale / n / Snc / CAP -->
+    <div style="grid-column:1/18">
+      <div class="label">Sede legale:</div>
+      <div class="line"><input id="sede_legale" class="inp" value="Via dei Perseveranti"></div>
+    </div>
+
+    <div style="grid-column:18/20">
+      <div class="label">n.</div>
+      <div class="line"><input id="sede_n" class="inp" value=""></div>
+    </div>
+
+    <div style="grid-column:20/22">
+      <div class="label">Snc</div>
+      <div class="line"><input id="sede_snc" class="inp" value=""></div>
+    </div>
+
+    <div style="grid-column:22/25">
+      <div class="label">CAP</div>
+      <div class="line"><input id="cap" class="inp" value="58053"></div>
+    </div>
+
+    <!-- Comune + Prov -->
+    <div style="grid-column:1/19">
+      <div class="label">Comune</div>
+      <div class="line"><input id="comune" class="inp" value="SEMPRONIANO"></div>
+    </div>
+    <div style="grid-column:19/21">
+      <div class="label">Prov.</div>
+      <div class="line"><input id="prov" class="inp" value="GR"></div>
+    </div>
+
+    <!-- Esercizio sociale (fix: tutto sulla stessa riga come immagine) -->
+    <div class="es-row">
+      <div class="es-line">
+        <div class="es-leftlbl">Esercizio sociale: data inizio</div>
+        <div class="es-date">
+          <div>
+            <div class="date-head"><span>Giorno</span><span>Mese</span><span>Anno</span></div>
+            <div class="date-row">
+              <div class="box"><input id="es_giorno_i" maxlength="2"></div>
+              <div class="box"><input id="es_mese_i" maxlength="2"></div>
+              <div class="box box-year"><input id="es_anno_i" maxlength="4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="es-line">
+        <div class="es-leftlbl">Data fine</div>
+        <div class="es-date">
+          <div>
+            <div class="date-head"><span>Giorno</span><span>Mese</span><span>Anno</span></div>
+            <div class="date-row">
+              <div class="box"><input id="es_giorno_f" maxlength="2"></div>
+              <div class="box"><input id="es_mese_f" maxlength="2"></div>
+              <div class="box box-year"><input id="es_anno_f" maxlength="4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Impianto -->
+    <div style="grid-column:1/9">
+      <div class="label">Impianto</div>
+      <div class="line"><input id="impianto" class="inp" value="G. Crispini"></div>
+    </div>
+
+    <!-- Capienza (2 righe) con 'Numero' sopra le caselle) -->
+    <div style="grid-column:1/25">
+      <div class="label">Capienza</div>
+      <div class="cap-group" style="margin-top:1mm">
+        <div class="cap-line"></div>
+        <div class="cap-num-wrap"><div class="cap-num-label">Numero</div><div class="cap-num">
+          <div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div>
+        </div></div>
+        <div class="cap-line"></div>
+        <div class="cap-num-wrap"><div class="cap-num-label">Numero</div><div class="cap-num">
+          <div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div>
+        </div></div>
+        <div class="cap-line"></div>
+        <div class="cap-num-wrap"><div class="cap-num-label">Numero</div><div class="cap-num">
+          <div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div>
+        </div></div>
+        <div class="cap-line"></div>
+      </div>
+
+      <div class="label" style="margin-top:2mm">Capienza</div>
+      <div class="cap-group" style="margin-top:1mm">
+        <div class="cap-line"></div>
+        <div class="cap-num-wrap"><div class="cap-num-label">Numero</div><div class="cap-num">
+          <div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div>
+        </div></div>
+        <div class="cap-line"></div>
+        <div class="cap-num-wrap"><div class="cap-num-label">Numero</div><div class="cap-num">
+          <div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div>
+        </div></div>
+        <div class="cap-line"></div>
+        <div class="cap-num-wrap"><div class="cap-num-label">Numero</div><div class="cap-num">
+          <div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div><div class="n"><input maxlength="1"></div>
+        </div></div>
+        <div class="cap-line"></div>
+      </div>
+    </div>
+
+    <!-- Via/Piazza -->
+    <div style="grid-column:1/18">
+      <div class="label">Via/Piazza</div>
+      <div class="line"><input id="via" class="inp" value=""></div>
+    </div>
+    <div style="grid-column:18/20">
+      <div class="label">n.</div>
+      <div class="line"><input id="via_n" class="inp" value=""></div>
+    </div>
+    <div style="grid-column:20/25">
+      <div class="label">CAP</div>
+      <div class="line"><input id="via_cap" class="inp" value=""></div>
+    </div>
+
+    <div style="grid-column:1/19">
+      <div class="label">Comune</div>
+      <div class="line"><input id="comune2" class="inp" value="SEMPRONIANO"></div>
+    </div>
+    <div style="grid-column:19/21">
+      <div class="label">Prov.</div>
+      <div class="line"><input id="prov2" class="inp" value="GR"></div>
+    </div>
+
+    <!-- Rappresentante legale -->
+    <div style="grid-column:1/25">
+      <div class="label">Rappresentante legale:</div>
+    </div>
+
+    <div style="grid-column:1/9">
+      <div class="label">Cognome</div>
+      <div class="line"><input id="cognome" class="inp" value=""></div>
+    </div>
+    <div style="grid-column:9/13">
+      <div class="label">Nome</div>
+      <div class="line"><input id="nome" class="inp" value=""></div>
+    </div>
+
+    <div style="grid-column:13/25">
+      <div class="label">Cod. Fiscale</div>
+      <div class="cf editable" id="cfRep"></div>
+      <input id="cf_rep" class="inp" style="position:absolute;left:-9999px;opacity:0" value="">
+    </div>
+
+    <div style="grid-column:1/25">
+      <div class="label">Residenza anagrafica o Domicilio fiscale:</div>
+      <div class="line"><input id="residenza" class="inp" value=""></div>
+    </div>
+
+    <div style="grid-column:1/19">
+      <div class="label">Comune</div>
+      <div class="line"><input id="comune3" class="inp" value=""></div>
+    </div>
+    <div style="grid-column:19/21">
+      <div class="label">Prov.</div>
+      <div class="line"><input id="prov3" class="inp" value=""></div>
+    </div>
+
+    <!-- Table (fix: SERIE split into Lettere + Numero like original) -->
+    <div class="tbl">
+      <table>
+        <colgroup>
+          <col style="width:40%">
+          <col style="width:7%">
+          <col style="width:8%">
+          <col style="width:12%">
+          <col style="width:12%">
+          <col style="width:12%">
+          <col style="width:9%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th rowspan="2">TIPO TITOLO<br><span class="sub">(Come da denominazione stampata)</span></th>
+            <th colspan="2">SERIE</th>
+            <th rowspan="2">IMPORTO<br><span class="sub">Lordo Unitario</span></th>
+            <th rowspan="2">DAL<br><span class="sub">numero</span></th>
+            <th rowspan="2">AL<br><span class="sub">numero</span></th>
+            <th rowspan="2">QUANTITÀ<br><span class="sub">col. 6 - col. 5 + 1</span></th>
+          </tr>
+          <tr>
+            <th><span class="sub">Lettere</span></th>
+            <th><span class="sub">Numero</span></th>
+          </tr>
+          <tr class="colnums">
+            <td>1</td>
+            <td>2</td>
+            <td>3</td>
+            <td>4</td>
+            <td>5</td>
+            <td>6</td>
+            <td>7</td>
+          </tr>
+        </thead>
+        <tbody id="tickets-body"></tbody>
+      </table>
+    </div>
+
+    <!-- signatures boxed -->
+    <div class="sigbox">
+      <div class="sigrow">
+        <div class="sigleft">
+          <div class="circle"></div>
+          <div class="siglbl" style="text-align:center">Contrassegno del</div>
+        </div>
+        <div class="sigcol">
+          <div class="sigline"></div>
+          <div class="siglbl">Firma per il concessionario</div>
+        </div>
+        <div class="sigcol">
+          <div class="sigline"></div>
+          <div class="siglbl">Firma del rappresentante legale</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">Il concessionario è individuato dall'art. 17 del DPR 26 ottobre 1972, n. 640 (SIEA)</div>
+  </div>
+</div>
+
+<script>
+const SD1_ID = {{ modulo_id|tojson }};
+const VIEW_ONLY = {{ view_only|tojson }};
+const DEFAULT_DATA = {{ default_data|tojson if default_data is defined else '{}' }};
+
+function pad2(n){return String(n).padStart(2,'0');}
+
+function getDigits(prefix, count){
+  let s='';
+  for(let i=1;i<=count;i++) s += (document.getElementById(prefix+i)?.value || '');
+  return s;
+}
+
+function setDigits(prefix, digits){
+  const s=String(digits ?? '').replace(/[^0-9]/g, '');
+  for(let i=1;i<=3;i++){
+    const el=document.getElementById(prefix+i);
+    if(el) el.value = s[i-1] || '';
+  }
+}
+
+function setDefaultDate(){
+  const now=new Date();
+  document.getElementById('man_giorno').value=pad2(now.getDate());
+  document.getElementById('man_mese').value=pad2(now.getMonth()+1);
+  document.getElementById('man_anno').value=String(now.getFullYear());
+  const hh=pad2(now.getHours()); const mi=pad2(now.getMinutes());
+  document.getElementById('man_ora').value=`${hh}:${mi}`;
+
+  document.getElementById('es_giorno_i').value=pad2(now.getDate());
+  document.getElementById('es_mese_i').value=pad2(now.getMonth()+1);
+  document.getElementById('es_anno_i').value=String(now.getFullYear());
+}
+
+async function loadNextProgressivo(){
+  if (SD1_ID) return;
+  try {
+    const res = await fetch('/api/moduli/sd1/next-progressivo');
+    const data = await res.json();
+    if (data && data.success) {
+      const value = String(data.progressivo || '1').padStart(3, '0');
+      setDigits('prog', value);
+    }
+  } catch (err) {
+    console.error('Errore caricamento progressivo:', err);
+  }
+}
+
+function collectData(){
+  const g=id=>document.getElementById(id)?.value||'';
+  const progressivoValue = getDigits('prog',3);
+  const data={
+    progressivo: progressivoValue ? Number(progressivoValue) : 0,
+    foglio: getDigits('foglio',2),
+    manifestazione:{giorno:g('man_giorno'),mese:g('man_mese'),anno:g('man_anno'),ora:g('man_ora'),tipo:g('man_tipo'),incontro:g('man_incontro'),polisportiva:g('man_polisportiva')},
+    societa:{nome:g('societa'),cod_fiscale:document.getElementById('cod_fiscale')?.value||'',sede_legale:g('sede_legale'),n:g('sede_n'),snc:g('sede_snc'),cap:g('cap'),comune:g('comune'),prov:g('prov')},
+    esercizio:{inizio:{giorno:g('es_giorno_i'),mese:g('es_mese_i'),anno:g('es_anno_i')},fine:{giorno:g('es_giorno_f'),mese:g('es_mese_f'),anno:g('es_anno_f')}},
+    impianto:g('impianto'),
+    indirizzo:{via:g('via'),n:g('via_n'),cap:g('via_cap'),comune:g('comune2'),prov:g('prov2')},
+    rappresentante:{cognome:g('cognome'),nome:g('nome'),cf:document.getElementById('cf_rep')?.value||'',residenza:g('residenza'),comune:g('comune3'),prov:g('prov3')},
+    biglietti:[]
+  };
+
+  document.querySelectorAll('#tickets-body tr').forEach(tr=>{
+    const tipo = tr.querySelector('.t-tipo')?.value||'';
+    const serie_let = tr.querySelector('.t-serie-let')?.value||'';
+    const serie_num = tr.querySelector('.t-serie-num')?.value||'';
+    const importo = tr.querySelector('.t-importo')?.value||'';
+    const dal = tr.querySelector('.t-dal')?.value||'';
+    const al = tr.querySelector('.t-al')?.value||'';
+    const quantita = tr.querySelector('.t-q')?.value||'';
+    if([tipo,serie_let,serie_num,importo,dal,al,quantita].some(v=>String(v).trim()!=='')){
+      data.biglietti.push({tipo,serie_let,serie_num,importo,dal,al,quantita});
+    }
+  });
+
+  return data;
+}
+
+async function doSave(){
+  const payload=collectData();
+  if (SD1_ID) {
+    payload.id = SD1_ID;
+  }
+
+  try{
+    const res=await fetch('/api/moduli/sd1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const j=await res.json();
+    if(j&&j.success) {
+      alert('Modulo salvato');
+      if (!SD1_ID && j.id) {
+        window.location.href = `/modulo_sd1/${j.id}`;
+      }
+    } else {
+      alert(j.message || 'Errore salvataggio');
+    }
+  }catch(e){alert('Errore: '+e.message)}
+}
+function doPrint(){window.print();}
+
+function setValue(id, value){
+  const el = document.getElementById(id);
+  if (el) el.value = value || '';
+}
+
+function applyDefaultData(){
+  if (!DEFAULT_DATA || Object.keys(DEFAULT_DATA).length === 0) return;
+  const rappresentante = DEFAULT_DATA.rappresentante || {};
+
+  setValue('societa', DEFAULT_DATA.ragione_sociale || '');
+  setValue('cod_fiscale', DEFAULT_DATA.partita_iva || '');
+  setValue('sede_legale', DEFAULT_DATA.sede_legale || '');
+  setValue('cap', DEFAULT_DATA.cap || '');
+  setValue('comune', DEFAULT_DATA.comune || '');
+  setValue('prov', DEFAULT_DATA.provincia || '');
+  setValue('impianto', DEFAULT_DATA.impianto || '');
+  setValue('man_tipo', DEFAULT_DATA.manifestazione_tipo || '');
+  setValue('man_incontro', DEFAULT_DATA.manifestazione_incontro || '');
+  setValue('man_polisportiva', DEFAULT_DATA.manifestazione_polisportiva || '');
+  setValue('cognome', rappresentante.cognome || DEFAULT_DATA.rappresentante_legale || '');
+  setValue('nome', rappresentante.nome || '');
+  setValue('cf_rep', DEFAULT_DATA.codice_fiscale_rappresentante || '');
+  setValue('residenza', DEFAULT_DATA.residenza_rappresentante || '');
+  setValue('comune3', DEFAULT_DATA.comune_rappresentante || '');
+  setValue('prov3', DEFAULT_DATA.provincia_rappresentante || '');
+
+  const hiddenCf = document.getElementById('cf_rep');
+  if (hiddenCf) {
+    hiddenCf.value = DEFAULT_DATA.codice_fiscale_rappresentante || '';
+  }
+  renderCf('cfSocieta', document.getElementById('cod_fiscale')?.value || '', 11);
+  renderCf('cfRep', document.getElementById('cf_rep')?.value || '', 16);
+}
+
+function fillTickets(rows){
+  const body=document.getElementById('tickets-body');
+  if(!body) return;
+  body.innerHTML='';
+
+  const list = Array.isArray(rows) && rows.length ? rows : [{}];
+  list.forEach((r)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input class="t-tipo" value="${r.tipo || ''}" /></td>
+      <td><input class="t-serie-let" maxlength="3" style="text-transform:uppercase" value="${r.serie_let || ''}" /></td>
+      <td><input class="t-serie-num" value="${r.serie_num || ''}" /></td>
+      <td><input class="t-importo" value="${r.importo || ''}" /></td>
+      <td><input class="t-dal" value="${r.dal || ''}" /></td>
+      <td><input class="t-al" value="${r.al || ''}" /></td>
+      <td><input class="t-q" value="${r.quantita || ''}" /></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function applyData(data){
+  setDigits('prog', data.progressivo || '');
+  setDigits('foglio', data.foglio || '');
+
+  const m = data.manifestazione || {};
+  setValue('man_giorno', m.giorno);
+  setValue('man_mese', m.mese);
+  setValue('man_anno', m.anno);
+  setValue('man_ora', m.ora);
+  setValue('man_tipo', m.tipo);
+  setValue('man_incontro', m.incontro);
+  setValue('man_polisportiva', m.polisportiva);
+
+  const s = data.societa || {};
+  setValue('societa', s.nome);
+  setValue('cod_fiscale', s.cod_fiscale);
+  setValue('sede_legale', s.sede_legale);
+  setValue('sede_n', s.n);
+  setValue('sede_snc', s.snc);
+  setValue('cap', s.cap);
+  setValue('comune', s.comune);
+  setValue('prov', s.prov);
+
+  const e = data.esercizio || {};
+  const i = e.inizio || {};
+  const f = e.fine || {};
+  setValue('es_giorno_i', i.giorno);
+  setValue('es_mese_i', i.mese);
+  setValue('es_anno_i', i.anno);
+  setValue('es_giorno_f', f.giorno);
+  setValue('es_mese_f', f.mese);
+  setValue('es_anno_f', f.anno);
+
+  setValue('impianto', data.impianto);
+
+  const ind = data.indirizzo || {};
+  setValue('via', ind.via);
+  setValue('via_n', ind.n);
+  setValue('via_cap', ind.cap);
+  setValue('comune2', ind.comune);
+  setValue('prov2', ind.prov);
+
+  const r = data.rappresentante || {};
+  setValue('cognome', r.cognome);
+  setValue('nome', r.nome);
+  setValue('cf_rep', r.cf);
+  setValue('residenza', r.residenza);
+  setValue('comune3', r.comune);
+  setValue('prov3', r.prov);
+
+  renderCf('cfSocieta', document.getElementById('cod_fiscale')?.value || '', 11);
+  setBoxesFromHidden('cfRep', 'cf_rep', 16);
+  fillTickets(data.biglietti);
+}
+
+async function loadSd1(){
+  if (!SD1_ID) return;
+  try {
+    const res = await fetch(`/api/moduli/sd1/${SD1_ID}`);
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.message || 'Errore caricamento modulo');
+    }
+    applyData(data.modulo || {});
+  } catch (err) {
+    alert('Errore: ' + err.message);
+  }
+}
+
+function setViewOnlyMode(){
+  if (!VIEW_ONLY) return;
+
+  const saveBtn = document.getElementById('btn-save');
+  if (saveBtn) saveBtn.style.display = 'none';
+  const addBtn = document.getElementById('btn-add-rows');
+  if (addBtn) addBtn.style.display = 'none';
+
+  document.querySelectorAll('input').forEach((el)=>{
+    el.readOnly = true;
+  });
+
+  document.querySelectorAll('#cfRep .c').forEach((box)=>{
+    box.contentEditable = 'false';
+  });
+}
+
+function renderCf(containerId, value, len){
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML='';
+  const v=(value||'').toUpperCase().replace(/\s+/g,'')
+  for(let i=0;i<len;i++){
+    const c=document.createElement('div');
+    c.className='c';
+    c.textContent=v[i]||'';
+    el.appendChild(c);
+  }
+}
+
+function initTickets(){
+  const body=document.getElementById('tickets-body');
+  if(!body) return;
+  body.innerHTML='';
+  addTicketRows(6);
+}
+
+function addTicketRows(n){
+  const body=document.getElementById('tickets-body');
+  if(!body) return;
+  const rows=Math.max(1, Number(n||0));
+  for(let i=0;i<rows;i++){
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input class="t-tipo" /></td>
+      <td><input class="t-serie-let" maxlength="3" style="text-transform:uppercase"/></td>
+      <td><input class="t-serie-num" /></td>
+      <td><input class="t-importo" /></td>
+      <td><input class="t-dal" /></td>
+      <td><input class="t-al" /></td>
+      <td><input class="t-q" /></td>
+    `;
+    body.appendChild(tr);
+  }
+}
+
+// aggiorna i box CF quando si modifica il valore nascosto
+function bindCf(hiddenId, containerId, len){
+  const hidden=document.getElementById(hiddenId);
+  if(!hidden) return;
+  hidden.addEventListener('input',()=>renderCf(containerId, hidden.value, len));
+}
+
+function enableEditableCf(containerId, hiddenId, len){
+  const cont=document.getElementById(containerId);
+  const hidden=document.getElementById(hiddenId);
+  if(!cont || !hidden) return;
+
+  // crea caselle editabili
+  cont.innerHTML='';
+  for(let i=0;i<len;i++){
+    const c=document.createElement('div');
+    c.className='c';
+    c.contentEditable='true';
+    c.inputMode='text';
+    c.spellcheck=false;
+    c.dataset.idx=String(i);
+    c.addEventListener('keydown',(e)=>{
+      const key=e.key;
+      const idx=Number(c.dataset.idx||'0');
+      if(key==='Backspace'){
+        if(c.textContent){
+          c.textContent='';
+        }else{
+          const prev=cont.querySelector(`.c[data-idx="${idx-1}"]`);
+          if(prev){ prev.focus(); prev.textContent=''; }
+        }
+        e.preventDefault();
+        syncHiddenFromBoxes(containerId, hiddenId, len);
+        return;
+      }
+      if(key==='ArrowLeft' || key==='ArrowRight'){
+        const delta=key==='ArrowLeft' ? -1 : 1;
+        const next=cont.querySelector(`.c[data-idx="${idx+delta}"]`);
+        if(next){ next.focus(); }
+        e.preventDefault();
+        return;
+      }
+      if(key.length===1){
+        const ch=key.toUpperCase();
+        if(!/^[A-Z0-9]$/.test(ch)){
+          e.preventDefault();
+          return;
+        }
+        c.textContent=ch;
+        const next=cont.querySelector(`.c[data-idx="${idx+1}"]`);
+        if(next) next.focus();
+        e.preventDefault();
+        syncHiddenFromBoxes(containerId, hiddenId, len);
+      }
+    });
+  
+    c.addEventListener('paste',(e)=>{
+      const txt=(e.clipboardData?.getData('text')||'').toUpperCase().replace(/\s+/g,'')
+      if(!txt) return;
+      e.preventDefault();
+      const start=Number(c.dataset.idx||'0');
+      for(let j=0;j<txt.length && (start+j)<len;j++){
+        const box=cont.querySelector(`.c[data-idx="${start+j}"]`);
+        if(box) box.textContent=txt[j];
+      }
+      const next=cont.querySelector(`.c[data-idx="${Math.min(start+txt.length, len-1)}"]`);
+      if(next) next.focus();
+      syncHiddenFromBoxes(containerId, hiddenId, len);
+    });
+
+    cont.appendChild(c);
+  }
+
+  // inizializza dai dati esistenti
+  setBoxesFromHidden(containerId, hiddenId, len);
+
+  // se cambia hidden (salvataggi/caricamenti), aggiorna i box
+  hidden.addEventListener('input',()=>setBoxesFromHidden(containerId, hiddenId, len));
+}
+
+function syncHiddenFromBoxes(containerId, hiddenId, len){
+  const cont=document.getElementById(containerId);
+  const hidden=document.getElementById(hiddenId);
+  if(!cont || !hidden) return;
+  let s='';
+  for(let i=0;i<len;i++){
+    const box=cont.querySelector(`.c[data-idx="${i}"]`);
+    s += (box?.textContent||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,1);
+  }
+  hidden.value=s;
+}
+
+function setBoxesFromHidden(containerId, hiddenId, len){
+  const cont=document.getElementById(containerId);
+  const hidden=document.getElementById(hiddenId);
+  if(!cont || !hidden) return;
+  const v=(hidden.value||'').toUpperCase().replace(/\s+/g,'')
+  for(let i=0;i<len;i++){
+    const box=cont.querySelector(`.c[data-idx="${i}"]`);
+    if(box) box.textContent=v[i]||'';
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  initTickets();
+  if (!SD1_ID) {
+    setDefaultDate();
+    loadNextProgressivo();
+    applyDefaultData();
+  }
+  renderCf('cfSocieta', document.getElementById('cod_fiscale')?.value || '', 11);
+  renderCf('cfRep', document.getElementById('cf_rep')?.value || '', 16);
+  bindCf('cod_fiscale','cfSocieta',11);
+  bindCf('cf_rep','cfRep',16);
+  enableEditableCf('cfRep','cf_rep',16);
+  loadSd1().then(setViewOnlyMode);
+});
+</script>
+</body>
+</html>

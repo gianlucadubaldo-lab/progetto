@@ -24,8 +24,10 @@
         
         /* Mostra SOLO il blocco print */
         #receipt-print-area {
-            display: block !important;
-            position: static !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            min-height: 100vh !important;
             width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -39,9 +41,11 @@
         /* Ricevuta a 80mm (formato termica) */
         .receipt-container {
             width: 80mm !important;
-            margin: 0 !important;
+            margin: 0 auto !important;
             padding: 0 !important;
             background: white !important;
+            display: flex !important;
+            justify-content: center !important;
         }
         
         .receipt {
@@ -101,10 +105,15 @@
         .receipt-meta-inline {
             font-size: 7pt !important;
             margin: 0.5mm 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.5mm !important;
         }
         
-        .meta-left {
-            display: block !important;
+        .meta-line {
+            display: flex !important;
+            justify-content: space-between !important;
+            gap: 2mm !important;
         }
         
         .meta-note {
@@ -209,11 +218,15 @@
     .receipt-meta-inline {
         font-size: 0.75rem;
         margin: 0.4rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
     }
     
-    .meta-left {
-        display: block;
-        margin-bottom: 0.3rem;
+    .meta-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
     }
     
     .meta-note {
@@ -243,11 +256,11 @@
             <hr>
             <!-- Intestazione -->
             <div class="receipt-meta-inline">
-                <div class="meta-left">
-                    <div>Data: {{ ordine.data_str }}</div>
-                    <div>Ora: {{ ordine.ora_str }}</div>
-                    <div>Scontrino: {{ Scontrino.numero }}</div>
+                <div class="meta-line">
+                    <span>Data: {{ ordine.data_str }}</span>
+                    <span>Ora: {{ ordine.ora_str }}</span>
                 </div>
+                <div>Scontrino: {{ Scontrino.numero }}</div>
                 {% if ordine.nota %}
                 <div class="meta-note">{{ ordine.nota }}</div>
                 {% endif %}

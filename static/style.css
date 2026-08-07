@@ -26,11 +26,11 @@
 .navbar {
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
-    position: sticky;
+    position: static;
     top: 0;
     z-index: 1000;
     padding: 1rem 2rem;
-    margin: 1rem auto;
+    margin: 0.09rem auto;
     width: fit-content;
     max-width: 95%;
     border-radius: 75rem;
@@ -278,7 +278,7 @@ body {
 .content {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 0.2rem;
     min-height: calc(100vh - 100px);
 }
 

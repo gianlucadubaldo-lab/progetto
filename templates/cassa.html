@@ -107,6 +107,7 @@ function aggiungiACarrello(prodotto, quantita = 1) {
         const btnPlus = rigaEsistente.querySelector('.btn-qty-plus');
         btnPlus.click(); // Aumenta di 1
         aggiornaTotali();
+        tbody.scrollTop = tbody.scrollHeight;
     } else {
         const tr = document.createElement('tr');
         tr.dataset.id = prodotto._id;
@@ -128,6 +129,7 @@ function aggiungiACarrello(prodotto, quantita = 1) {
         `;
         tbody.appendChild(tr);
         aggiornaTotali();
+        tbody.scrollTop = tbody.scrollHeight;
     }
 }
 

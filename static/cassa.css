@@ -5,7 +5,7 @@
 /* POS CONTAINER - Layout principale */
 .pos-container {
     display: grid;
-    grid-template-columns: 1.4fr 2.6fr;
+    grid-template-columns: 1.6fr 2.4fr;
     gap: 1.5rem;
     padding: 1.5rem;
     min-height: calc(100vh - 100px);
@@ -19,8 +19,12 @@
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
-    min-width: 320px;
-    max-width: 360px;
+    min-width: 380px;
+    max-width: 720px;
+    /* Prevent the left column from growing past viewport height */
+    max-height: calc(100vh - 100px);
+    height: auto;
+    min-height: 0;
     background: white;
     border-radius: 1.5rem;
     padding: 1.5rem;
@@ -52,16 +56,18 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    /* keep internal scrolling inside the cart area */
     overflow: hidden;
-    min-height: 300px;
+    min-height: 0;
+    flex: 1 1 auto;
 }
 .pos-cart table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.95rem;
+    display: table;
+    table-layout: fixed;
     height: 100%;
-    display: flex;
-    flex-direction: column;
 }
 .pos-cart thead {
     background: #f3f4f6;
@@ -69,7 +75,6 @@
     display: table;
     width: 100%;
     table-layout: fixed;
-    flex-shrink: 0;
 }
 .pos-cart th {
     padding: 0.8rem;
@@ -79,12 +84,52 @@
 }
 .pos-cart tbody {
     display: block;
-    overflow-y: scroll;
-    flex: 1;
-    height: 10px; /* Consente al flex: 1 di determinare l'altezza reale */
+    overflow-y: auto;
+    flex: 1 1 auto;
+    max-height: 100%;
+    min-height: 0;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
 }
+
+/* Fallback: garantisce che il corpo della tabella non superi la viewport
+   meno lo spazio stimato per header/summary/actions, mantenendo lo scroll */
+.pos-cart tbody {
+    max-height: calc(100vh - 260px);
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Variant: keep scrollbar gutter stable and style scrollbar for visibility */
+.pos-cart tbody {
+    scrollbar-gutter: stable;
+}
+
+.pos-cart tbody::-webkit-scrollbar {
+    width: 10px;
+}
+.pos-cart tbody::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+.pos-cart tbody::-webkit-scrollbar-thumb {
+    background: rgba(100,116,139,0.6);
+    border-radius: 8px;
+}
+
+/* Responsive fallbacks for different viewport heights */
+@media (max-height: 700px) {
+    .pos-cart tbody { max-height: calc(100vh - 220px); }
+}
+@media (min-height: 900px) {
+    .pos-cart tbody { max-height: calc(100vh - 300px); }
+}
+
+/* Force .pos-cart to have a calculable height so tbody can inherit percentages */
+.pos-cart.force-height {
+    height: calc(100vh - 140px);
+    min-height: 120px;
+}
+.pos-cart.force-height table { height: 100%; }
+.pos-cart.force-height tbody { max-height: calc(100% - 0); }
 
 .pos-cart tbody::-webkit-scrollbar {
     width: 8px;
@@ -244,6 +289,11 @@
     border-radius: 0.8rem;
     padding: 1.2rem;
     border-left: 4px solid #0077B6;
+}
+.pos-summary,
+.pos-actions {
+    /* prevent these blocks from stretching the left column; reserve space outside the scrollable cart */
+    flex: 0 0 auto;
 }
 .pos-summary div {
     display: flex;
@@ -593,6 +643,7 @@
         order: 2;
         padding: 1rem;
         margin-top: 1rem;
+        min-width: 360px;
     }
     
     .pos-cart { min-height: 250px; }

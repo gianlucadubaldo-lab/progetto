@@ -162,7 +162,7 @@
        STILI COMUNI
        ============================================ */
     .receipt {
-        font-family: 'Courier New', monospace;
+        font-family: 'Times New Roman', monospace;
         line-height: 1.3;
         background: white;
         color: black;
@@ -246,7 +246,7 @@
                 <div class="meta-left">
                     <div>Data: {{ ordine.data_str }}</div>
                     <div>Ora: {{ ordine.ora_str }}</div>
-                    <div>Ordine: {{ ordine.numero }}</div>
+                    <div>Scontrino: {{ Scontrino.numero }}</div>
                 </div>
                 {% if ordine.nota %}
                 <div class="meta-note">{{ ordine.nota }}</div>

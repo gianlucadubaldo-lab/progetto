@@ -135,7 +135,7 @@
         }
         
         small {
-            font-size: 6pt !important;
+            font-size: 8pt !important;
         }
         
         @page {
@@ -243,7 +243,7 @@
     }
     
     .center {
-        text-align: center;
+         text-align: center !important;
         margin: 0.3rem 0;
     }
 </style>
@@ -290,6 +290,7 @@
 
             <hr>
             <p class="right">Totale: € {{ "%.2f"|format(ordine.totale) }}</p>
+
             <div class="center" style="margin-top: 0.3rem;">
                 <small>Grazie e arrivederci!</small>
             </div>
